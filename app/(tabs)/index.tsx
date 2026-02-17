@@ -1,12 +1,13 @@
-import { Text } from 'react-native'
-import { SafeAreaView } from 'react-native-safe-area-context'
+import { ScrollView, TouchableOpacity, Text } from 'react-native'
 
-const WalletScreen = () => {
+const TransactionScreen = () => {
   return (
-    <SafeAreaView>
-      <Text className="text-white">Hi threr</Text>
-    </SafeAreaView>
+    <ScrollView contentContainerClassName="flex-1 items-center justify-center">
+      <TouchableOpacity activeOpacity={0.8} className="m-4 rounded-lg bg-amber-500 p-4">
+        <Text className="text-amber-300">hi</Text>
+      </TouchableOpacity>
+    </ScrollView>
   )
 }
 
-export default WalletScreen
+export default TransactionScreen
