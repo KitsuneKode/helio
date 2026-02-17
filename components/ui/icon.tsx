@@ -1,16 +1,10 @@
 import { cn } from '@/lib/utils'
-import type { HugeiconsIconComponent, HugeiconsProps } from '@hugeicons/react-native'
+import { type HugeiconsProps, HugeiconsIcon } from '@hugeicons/react-native'
 import { withUniwind } from 'uniwind'
 
-type IconProps = HugeiconsProps & {
-  as: HugeiconsIconComponent
-}
+type IconProps = HugeiconsProps & {}
 
-function IconImpl({ as: IconComponent, ...props }: IconProps) {
-  return <IconComponent {...props} />
-}
-
-const StyledIcon = withUniwind(IconImpl, {
+const StyledIcon = withUniwind(HugeiconsIcon, {
   size: {
     fromClassName: 'className',
     styleProperty: 'width',
@@ -30,10 +24,10 @@ const StyledIcon = withUniwind(IconImpl, {
  * @component
  * @example
  * ```tsx
- * import { ArrowRight } from 'lucide-react-native';
+ * import { ArrowRight } from '@hugeicons/core-free-icons';
  * import { Icon } from '@/registry/components/ui/icon';
  *
- * <Icon as={ArrowRight} className="text-red-500 size-4" />
+ * <Icon icon={ArrowRight} className="text-red-500 size-4" />
  * ```
  *
  * @param {HugeiconsIconComponent} as - The HugeIcons icon component to render.
@@ -41,10 +35,8 @@ const StyledIcon = withUniwind(IconImpl, {
  * @param {number} size - Icon size (overrides the size class).
  * @param {...HugeiconsProps} ...props - Additional HugeIcons icon props passed to the "as" icon.
  */
-function Icon({ as: IconComponent, className, ...props }: IconProps) {
-  return (
-    <StyledIcon as={IconComponent} className={cn('text-foreground size-5', className)} {...props} />
-  )
+function Icon({ className, ...props }: IconProps) {
+  return <StyledIcon className={cn('text-foreground size-5', className)} {...props} />
 }
 
 export { Icon }
