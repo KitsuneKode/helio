@@ -1,10 +1,12 @@
-import { Text } from 'react-native'
+import { Text, View } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
 
 const SwapScreen = () => {
   return (
-    <SafeAreaView>
-      <Text className="text-foreground items-center justify-center">Helloo</Text>
+    <SafeAreaView className="bg-background flex-1 items-center justify-center">
+      <View className="text-primary flex-1">
+        <Text className="flex-1">Helloo</Text>
+      </View>
     </SafeAreaView>
   )
 }
