@@ -1,10 +1,9 @@
 import { LAMPORTS_PER_SOL } from '@/constants/solana'
+import { RPC_URL } from '@/config'
 import { TOKEN_PROGRAM_ADDRESS } from '@solana-program/token'
 import { address, createSolanaRpc, TransactionError, type Address } from '@solana/kit'
 
-const rpcUrl = process.env.RPC_URL!
-
-const rpc = createSolanaRpc(rpcUrl)
+const rpc = createSolanaRpc(RPC_URL)
 
 export type GetTokensResult = { mint: string; amount: number }[]
 
@@ -42,7 +41,7 @@ export const getAllTokens = async (pubKey: Address): Promise<GetTokensResult> =>
     .getTokenAccountsByOwner(
       pubKey,
       { programId: TOKEN_PROGRAM_ADDRESS },
-      { encoding: 'jsonParsed' }
+      { encoding: 'jsonParsed' },
     )
     .send()
 

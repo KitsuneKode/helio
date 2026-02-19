@@ -5,6 +5,8 @@ import { Input } from '@/components/ui/input'
 import { LabelUniwind } from '@/components/ui/label'
 import { Text } from '@/components/ui/text'
 import { HeaderText } from '@/components/wallet-screen/header'
+import { TransactionHeader } from '@/components/wallet-screen/transaction-header'
+import { BalanceCard } from '@/components/wallet-screen/balance-card'
 import type { GetTokensResult, GetTransactionsResult } from '@/lib/solana'
 import { getAllTokens, getAllTransactions, getBalance, isValidPublicKey } from '@/lib/solana'
 import { useState, useTransition } from 'react'
@@ -20,7 +22,7 @@ import {
 
 const TransactionScreen = () => {
   const [value, setValue] = useState<string>('')
-  const [balance, setBalance] = useState<number>(0)
+  const [balance, setBalance] = useState<number | null>(null)
   const [tokens, setTokens] = useState<GetTokensResult>([])
   const [transactions, setTransactions] = useState<GetTransactionsResult>([])
   const [loading, startTransition] = useTransition()
@@ -110,12 +112,18 @@ const TransactionScreen = () => {
               </Button>
             </View>
           </View>
+
+          {balance !== null && <BalanceCard balance={balance} address={value.trim()} />}
           <FlatList
-            ListHeaderComponent={<Text className="">Recent Transactions</Text>}
+            ListHeaderComponent={<TransactionHeader />}
             scrollEnabled={false}
             keyExtractor={(item) => item.signature}
             data={transactions}
-            renderItem={({ item }) => <Text>{item.signature}</Text>}
+            renderItem={({ item }) => (
+              <View className="flex-1">
+                <Text className="text-foreground">{item.signature}</Text>
+              </View>
+            )}
           />
         </ScrollView>
       </KeyboardAvoidingView>
