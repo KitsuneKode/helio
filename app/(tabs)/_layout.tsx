@@ -1,4 +1,3 @@
-import { ThemeToggle } from '@/components/theme-toggle-button'
 import { Tabs } from 'expo-router'
 
 export default function Layout() {
@@ -7,17 +6,15 @@ export default function Layout() {
       <Tabs.Screen
         name="index"
         options={{
-          title: ' Transaction',
-          headerTransparent: true,
-          headerRight: () => <ThemeToggle />,
+          title: 'Home',
+          headerShown: false,
         }}
       />
       <Tabs.Screen
         name="swap"
         options={{
           title: 'Swap',
-          headerTransparent: true,
-          headerRight: () => <ThemeToggle />,
+          headerShown: false,
         }}
       />
     </Tabs>

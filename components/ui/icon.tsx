@@ -5,13 +5,13 @@ import { withUniwind } from 'uniwind'
 type IconProps = HugeiconsProps & {}
 
 const StyledIcon = withUniwind(HugeiconsIcon, {
-  size: {
-    fromClassName: 'className',
-    styleProperty: 'width',
-  },
   color: {
     fromClassName: 'className',
     styleProperty: 'color',
+  },
+  size: {
+    fromClassName: 'className',
+    styleProperty: 'width',
   },
 })
 
@@ -30,13 +30,12 @@ const StyledIcon = withUniwind(HugeiconsIcon, {
  * <Icon icon={ArrowRight} className="text-red-500 size-4" />
  * ```
  *
- * @param {HugeiconsIconComponent} as - The HugeIcons icon component to render.
  * @param {string} className - Utility classes to style the icon using Uniwind.
  * @param {number} size - Icon size (overrides the size class).
  * @param {...HugeiconsProps} ...props - Additional HugeIcons icon props passed to the "as" icon.
  */
 function Icon({ className, ...props }: IconProps) {
-  return <StyledIcon className={cn('text-foreground size-5', className)} {...props} />
+  return <StyledIcon className={cn('text-primary size-5', className)} {...props} />
 }
 
 export { Icon }
