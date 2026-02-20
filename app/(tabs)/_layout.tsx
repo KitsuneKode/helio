@@ -11,6 +11,13 @@ export default function Layout() {
         }}
       />
       <Tabs.Screen
+        name="swap-antigravity"
+        options={{
+          title: 'Swap Antigravity',
+          headerShown: false,
+        }}
+      />
+      <Tabs.Screen
         name="swap"
         options={{
           title: 'Swap',

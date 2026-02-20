@@ -26,6 +26,11 @@ export default function RootLayout() {
           <Stack.Screen name="default" options={{ headerShown: false }} />
           <Stack.Screen name="token/[mint]" options={{ headerShown: false }} />
           <Stack.Screen name="transaction/[signature]" options={{ headerShown: false }} />
+          <Stack.Screen name="token-antigravity/[mint]" options={{ headerShown: false }} />
+          <Stack.Screen
+            name="transaction-antigravity/[signature]"
+            options={{ headerShown: false }}
+          />
         </Stack>
         <PortalHost />
       </ThemeProvider>

@@ -77,7 +77,6 @@ export const getAllTokens = async (rpc: SolanaRpc, pubKey: Address): Promise<Tok
         amount: Number(account.data.parsed.info.tokenAmount.uiAmountString),
       }))
       .filter(({ amount }) => amount > 0)
-      .sort((a, b) => b.amount - a.amount) // Sort by amount in descending order
   } catch (error) {
     console.error('Error fetching token accounts:', error)
     return [{ mint: '', amount: 0 }]

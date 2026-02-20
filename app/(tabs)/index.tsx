@@ -187,7 +187,7 @@ const TransactionScreen = () => {
 
   const handleTokenPress = (token: GetTokensResult[number]) => {
     router.push({
-      pathname: '/token/[mint]',
+      pathname: '/token-antigravity/[mint]',
       params: {
         mint: token.mint,
         amount: String(token.amount),
@@ -199,7 +199,7 @@ const TransactionScreen = () => {
   }
 
   const handleTransactionPress = (signature: string) => {
-    router.push({ pathname: '/transaction/[signature]', params: { signature } })
+    router.push({ pathname: '/transaction-antigravity/[signature]', params: { signature } })
   }
 
   return (
