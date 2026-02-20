@@ -1,11 +1,36 @@
 import { LAMPORTS_PER_SOL } from '@/constants/solana'
-import { RPC_URL } from '@/config'
+import { fetchAllDigitalAsset } from '@metaplex-foundation/mpl-token-metadata-kit'
 import { TOKEN_PROGRAM_ADDRESS } from '@solana-program/token'
-import { address, createSolanaRpc, TransactionError, type Address } from '@solana/kit'
+import {
+  address,
+  type Address,
+  type Signature,
+  type TransactionError,
+  type createSolanaRpc,
+} from '@solana/kit'
+import axios from 'axios'
 
-const rpc = createSolanaRpc(RPC_URL)
+export type SolanaRpc = ReturnType<typeof createSolanaRpc>
 
-export type GetTokensResult = { mint: string; amount: number }[]
+export type FetchMetadataFromJupiterResult = {
+  id: string
+  name: string
+  symbol: string
+  decimals: number
+  icon: string
+  tokenProgram: string
+  totalSupply: number
+}
+
+export type TokenBalance = { mint: string; amount: number }
+
+export type GetTokensResult = (TokenBalance & {
+  tokenName?: string
+  symbol?: string
+  logoURI?: string
+})[]
+
+export type GetBalanceResult = { balance: number; address: string }
 
 export type GetTransactionsResult = {
   signature: string
@@ -29,14 +54,15 @@ export const isValidPublicKey = (pubKey: string): ValidatePublicKeyResult => {
   }
 }
 
-export const getBalance = async (pubKey: Address) => {
+export const getBalance = async (rpc: SolanaRpc, pubKey: Address): Promise<GetBalanceResult> => {
   const balance = await rpc.getBalance(pubKey).send()
-
-  const balanceInSol = Number(balance.value / LAMPORTS_PER_SOL)
-  return balanceInSol
+  return {
+    balance: Number(balance.value / LAMPORTS_PER_SOL),
+    address: pubKey.toString(),
+  }
 }
 
-export const getAllTokens = async (pubKey: Address): Promise<GetTokensResult> => {
+export const getAllTokens = async (rpc: SolanaRpc, pubKey: Address): Promise<TokenBalance[]> => {
   const response = await rpc
     .getTokenAccountsByOwner(
       pubKey,
@@ -45,28 +71,88 @@ export const getAllTokens = async (pubKey: Address): Promise<GetTokensResult> =>
     )
     .send()
 
-  const requiredAccounts = response.value
+  return response.value
     .map(({ account }) => ({
-      mint: account.data.parsed.info.mint.toString(),
+      mint: account.data.parsed.info.mint as string,
       amount: Number(account.data.parsed.info.tokenAmount.uiAmountString),
     }))
-    .filter(({ amount }) => Number(amount) > 0)
-
-  return requiredAccounts
+    .filter(({ amount }) => amount > 0)
 }
 
-export const getAllTransactions = async (pubKey: Address): Promise<GetTransactionsResult> => {
+export const TX_PAGE_SIZE = 10
+
+export const getAllTransactions = async (
+  rpc: SolanaRpc,
+  pubKey: Address,
+  before?: string,
+): Promise<GetTransactionsResult> => {
   const signatures = await rpc
     .getSignaturesForAddress(pubKey, {
-      limit: 10,
+      limit: TX_PAGE_SIZE,
+      ...(before ? { before: before as Signature } : {}),
     })
     .send()
 
-  const requiredSignatureData = signatures.map(({ signature, blockTime, err }) => ({
+  return signatures.map(({ signature, blockTime, err }) => ({
     signature: signature.toString(),
     blockTime: blockTime?.toString(),
     err,
   }))
+}
 
-  return requiredSignatureData
+export const getTransactionDetail = async (rpc: SolanaRpc, signature: string) => {
+  return rpc
+    .getTransaction(signature as Signature, {
+      encoding: 'jsonParsed',
+      maxSupportedTransactionVersion: 0,
+    })
+    .send()
+}
+
+// Fetches token metadata (name, symbol, logoURI) from Jupiter Token API.
+// Plain HTTP — no crypto dependency. Falls back gracefully for unknown / devnet mints.
+
+export const getAllTokenMetadataFromJupiter = async (mints: string[]) => {
+  const mint = mints.join(',')
+
+  const res = await axios.get<FetchMetadataFromJupiterResult[]>(
+    `https://lite-api.jup.ag/token/${mint}`,
+
+    {
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    },
+  )
+  if (!res.data) return
+
+  return new Map(
+    res.data.map(({ id, name, symbol, icon, decimals, tokenProgram, totalSupply }) => [
+      id,
+      {
+        tokenName: name,
+        symbol,
+        logoURI: icon,
+        decimals,
+        tokenProgram,
+        totalSupply,
+      },
+    ]),
+  )
+}
+
+// Metaplex on-chain metadata fetch — requires crypto.subtle polyfill
+export const getAllTokenMetadata = async (rpc: SolanaRpc, mints: Address[]) => {
+  const assets = await fetchAllDigitalAsset(rpc, mints)
+
+  return new Map(
+    assets.map(({ address, metadata }) => [
+      address.toString(),
+      {
+        tokenName: metadata.name,
+        symbol: metadata.symbol,
+        logoURI: metadata.uri,
+      },
+    ]),
+  )
 }
