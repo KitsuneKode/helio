@@ -140,21 +140,30 @@ function StatusHero({
       <View className="items-center justify-center">
         {success && (
           <Animated.View
-            style={pulseStyle}
-            className="absolute h-14 w-14 rounded-full bg-green-500/20"
+            style={[
+              pulseStyle,
+              {
+                position: 'absolute',
+                width: 56,
+                height: 56,
+                borderRadius: 28,
+                backgroundColor: 'rgba(34,197,94,0.2)',
+              },
+            ]}
           />
         )}
-        <Animated.View
-          style={iconStyle}
-          className={[
-            'h-14 w-14 items-center justify-center rounded-full',
-            success ? 'bg-green-500/10' : 'bg-destructive/10',
-          ].join(' ')}>
-          {success ? (
-            <Icon icon={CheckmarkCircle01Icon} className="size-7 text-green-500" />
-          ) : (
-            <Icon icon={CancelCircleIcon} className="text-destructive size-7" />
-          )}
+        <Animated.View style={iconStyle}>
+          <View
+            className={[
+              'h-14 w-14 items-center justify-center rounded-full',
+              success ? 'bg-green-500/10' : 'bg-destructive/10',
+            ].join(' ')}>
+            {success ? (
+              <Icon icon={CheckmarkCircle01Icon} className="size-7 text-green-500" />
+            ) : (
+              <Icon icon={CancelCircleIcon} className="text-destructive size-7" />
+            )}
+          </View>
         </Animated.View>
       </View>
 
