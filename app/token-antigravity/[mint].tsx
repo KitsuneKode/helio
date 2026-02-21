@@ -26,7 +26,7 @@ import { Icon } from '@/components/ui/icon'
 import { Text } from '@/components/ui/text'
 import { Skeleton } from '@/components/ui/skeleton'
 import { short } from '@/utils/format-text'
-import { SafeAreaViewUniwind } from '@/components/styled-uniwind-components'
+import { AnimatedViewUniwind, SafeAreaViewUniwind } from '@/components/styled-uniwind-components'
 import {
   getTokenMarketData,
   formatUSD,
@@ -132,7 +132,7 @@ export default function TokenDetailScreenAntigravity() {
 
       <ScrollView showsVerticalScrollIndicator={false} className="flex-1 px-4">
         {/* ── Hero ── */}
-        <Animated.View
+        <AnimatedViewUniwind
           entering={FadeInDown.delay(60).springify().damping(16)}
           className="items-center py-8"
         >
@@ -211,7 +211,7 @@ export default function TokenDetailScreenAntigravity() {
               </Pressable>
             </Animated.View>
           )}
-        </Animated.View>
+        </AnimatedViewUniwind>
 
         {/* ── Holdings Card ── */}
         <Animated.View

@@ -354,13 +354,13 @@ export default function Swap3Screen() {
       <ScrollView
         showsVerticalScrollIndicator={false}
         keyboardShouldPersistTaps="handled"
-        contentContainerStyle={{ paddingBottom: 48 }}
+        contentContainerClassName="pb-12"
       >
-        <View className="px-5 pb-4 pt-6">
+        <View className="px-5 pb-4 pt-4">
           {/* ── Header — matches swap v1 style ── */}
           <View className="mb-6 flex-row items-center justify-between">
             <View>
-              <Text className="text-foreground text-2xl font-extrabold tracking-tight">Swap</Text>
+              <Text className="text-foreground text-2xl font-bold tracking-tight">Swap</Text>
               <Text className="text-muted-foreground mt-0.5 text-xs font-medium">
                 via Jupiter Aggregator
               </Text>

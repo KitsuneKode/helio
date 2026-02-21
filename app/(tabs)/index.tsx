@@ -60,7 +60,8 @@ const TransactionScreen = () => {
 
   const [value, setValue] = useState<string>('')
   const [loading, setLoading] = useState(false)
-  const [loadingMore, setLoadingMore] = useState(false)
+  const [loadingMoreTxn, setLoadingMoreTxn] = useState(false)
+  const [loadingMoreTkn, setLoadingMoreTkn] = useState(false)
   const [walletData, setWalletData] = useState<WalletData | null>(null)
 
   const hasSearched = walletData !== null
@@ -137,7 +138,7 @@ const TransactionScreen = () => {
     const { success, address: publicKey } = isValidPublicKey(value.trim())
     if (!success) return
 
-    setLoadingMore(true)
+    setLoadingMoreTxn(true)
     try {
       const more = await getAllTransactions(rpc, publicKey, lastSig)
       setWalletData((prev) =>
@@ -152,12 +153,13 @@ const TransactionScreen = () => {
     } catch (err) {
       console.error('Load more transactions error:', (err as Error).message)
     } finally {
-      setLoadingMore(false)
+      setLoadingMoreTxn(false)
     }
   }
 
-  const handleLoadMoreTokens = () => {
+  const handleLoadMoreTokens = async () => {
     if (!walletData) return
+    setLoadingMoreTkn(true)
     const from = walletData.visibleTokens.length
     const nextSlice = walletData.allTokens.slice(from, from + TOKEN_PAGE)
     if (nextSlice.length === 0) return
@@ -165,8 +167,9 @@ const TransactionScreen = () => {
     setWalletData((prev) =>
       prev ? { ...prev, visibleTokens: [...prev.visibleTokens, ...nextSlice] } : prev,
     )
+    try {
+      const metaMap = await getMetaDataFromCacheOrFetch(nextSlice.map((t) => t.mint))
 
-    getMetaDataFromCacheOrFetch(nextSlice.map((t) => t.mint)).then((metaMap) => {
       setWalletData((prev) => {
         if (!prev) return prev
         return {
@@ -177,7 +180,12 @@ const TransactionScreen = () => {
           ],
         }
       })
-    })
+    } catch (err) {
+      console.error('Load more tokens metadata error:', (err as Error).message)
+      Alert.alert('Error', 'Failed to load more tokens metadata. Please try again later.')
+    } finally {
+      setLoadingMoreTkn(false)
+    }
   }
 
   const handleShowLessTokens = () => {
@@ -295,7 +303,7 @@ const TransactionScreen = () => {
                 ListFooterComponent={
                   hasMoreTokens || canShowLess ? (
                     <View className="border-border mx-1 flex-row border-t">
-                      {canShowLess && (
+                      {canShowLess && !loadingMoreTkn && (
                         <Pressable
                           onPress={handleShowLessTokens}
                           className="flex-1 items-center py-3 active:opacity-60"
@@ -311,9 +319,13 @@ const TransactionScreen = () => {
                           onPress={handleLoadMoreTokens}
                           className="flex-1 items-center py-3 active:opacity-60"
                         >
-                          <Text variant="small" className="text-primary">
-                            Load more
-                          </Text>
+                          {loadingMoreTkn ? (
+                            <ActivityIndicator size="small" />
+                          ) : (
+                            <Text variant="small" className="text-primary">
+                              Load more
+                            </Text>
+                          )}
                         </Pressable>
                       )}
                     </View>
@@ -344,11 +356,11 @@ const TransactionScreen = () => {
                   walletData.hasMoreTx ? (
                     <Pressable
                       onPress={handleLoadMoreTransactions}
-                      disabled={loadingMore}
+                      disabled={loadingMoreTxn}
                       className="active:opacity-60"
                     >
                       <View className="border-border mx-1 items-center border-t py-3">
-                        {loadingMore ? (
+                        {loadingMoreTxn ? (
                           <ActivityIndicator size="small" />
                         ) : (
                           <Text variant="small" className="text-primary">

@@ -33,7 +33,6 @@ export const getMetaDataFromCacheOrFetch = async (mints: string[]) => {
 
   if (missing.length !== 0) {
     const metadataFromJupiter = await getAllTokenMetadataFromJupiter(missing)
-    console.log('Metadata from Jupiter:', metadataFromJupiter)
     if (!metadataFromJupiter) return present
 
     metadataFromJupiter.forEach((metadata, mint) => {
