@@ -47,7 +47,8 @@ export const BalanceCard = ({ balance, address }: Props) => {
       <View className="border-border border-t px-5 py-4">
         <Pressable
           onPress={handleCopy}
-          className="flex-row items-center justify-between active:opacity-60">
+          className="flex-row items-center justify-between active:opacity-60"
+        >
           <View className="mr-4 flex-1">
             <Text variant="muted" className="mb-1 text-xs tracking-wider uppercase">
               Wallet Address
@@ -59,7 +60,8 @@ export const BalanceCard = ({ balance, address }: Props) => {
             <Icon icon={Copy01Icon} className="text-muted-foreground size-4" />
             <Text
               variant="small"
-              className={copied ? 'text-primary font-semibold' : 'text-muted-foreground'}>
+              className={copied ? 'text-primary font-semibold' : 'text-muted-foreground'}
+            >
               {copied ? 'Copied!' : 'Copy'}
             </Text>
           </View>

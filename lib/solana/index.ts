@@ -1,4 +1,4 @@
-import { LAMPORTS_PER_SOL } from '@/constants/solana'
+import { LAMPORTS_PER_SOL, TXN_PAGE } from '@/constants/solana'
 import { TOKEN_PROGRAM_ADDRESS } from '@solana-program/token'
 import {
   address,
@@ -83,8 +83,6 @@ export const getAllTokens = async (rpc: SolanaRpc, pubKey: Address): Promise<Tok
   }
 }
 
-export const TX_PAGE_SIZE = 10
-
 export const getAllTransactions = async (
   rpc: SolanaRpc,
   pubKey: Address,
@@ -92,7 +90,7 @@ export const getAllTransactions = async (
 ): Promise<GetTransactionsResult> => {
   const signatures = await rpc
     .getSignaturesForAddress(pubKey, {
-      limit: TX_PAGE_SIZE,
+      limit: TXN_PAGE,
       ...(before ? { before: before as Signature } : {}),
     })
     .send()

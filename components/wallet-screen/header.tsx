@@ -1,11 +1,19 @@
 import { View } from 'react-native'
 import { Text } from '../ui/text'
+import { NetworkToggle } from '@/components/wallet-screen/network-toggle'
+import { ThemeToggle } from '@/components/theme-toggle-button'
 
-export const HeaderText = () => {
+export function Header() {
   return (
-    <View className="justify-start gap-0.5">
-      <Text className="text-foreground text-2xl font-bold tracking-tight">SolScan</Text>
-      <Text className="text-muted-foreground text-xs">Explore any Solana wallet</Text>
+    <View className="mt-4 flex-row items-center justify-between pb-6">
+      <View className="justify-start gap-0.5">
+        <Text className="text-foreground text-2xl font-bold tracking-tight">SolScan</Text>
+        <Text className="text-muted-foreground text-xs">Explore any Solana wallet</Text>
+      </View>
+      <View className="flex-row items-center gap-1">
+        <NetworkToggle />
+        <ThemeToggle />
+      </View>
     </View>
   )
 }

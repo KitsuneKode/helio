@@ -29,7 +29,8 @@ export const TransactionListItem = ({ item, onPress }: Props) => {
           className={[
             'h-10 w-10 shrink-0 items-center justify-center rounded-full',
             isSuccess ? 'bg-green-500/15' : 'bg-destructive/15',
-          ].join(' ')}>
+          ].join(' ')}
+        >
           {isSuccess ? (
             <Icon icon={CheckmarkCircle01Icon} className="size-5 text-green-500" />
           ) : (
@@ -47,12 +48,14 @@ export const TransactionListItem = ({ item, onPress }: Props) => {
               className={[
                 'rounded px-1.5 py-0.5',
                 isSuccess ? 'bg-green-500/10' : 'bg-destructive/10',
-              ].join(' ')}>
+              ].join(' ')}
+            >
               <Text
                 className={[
                   'text-xs font-semibold',
                   isSuccess ? 'text-green-500' : 'text-destructive',
-                ].join(' ')}>
+                ].join(' ')}
+              >
                 {isSuccess ? 'Success' : 'Failed'}
               </Text>
             </View>

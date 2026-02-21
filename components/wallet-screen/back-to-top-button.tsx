@@ -37,19 +37,20 @@ export const BackToTopButton = ({ scrollY, scrollRef }: Props) => {
           right: 20,
           zIndex: 50,
         },
-      ]}>
+      ]}
+    >
       <Pressable
         onPress={handlePress}
-        className="active:opacity-80"
+        className="active:opacity-80 bg-primary/50"
         style={{
-          backgroundColor: 'rgba(0,0,0,0.75)',
           borderRadius: 24,
           width: 48,
           height: 48,
           alignItems: 'center',
           justifyContent: 'center',
-        }}>
-        <Icon icon={ArrowUp01Icon} className="size-5 text-white" />
+        }}
+      >
+        <Icon icon={ArrowUp01Icon} size={24} className=" text-primary-foreground" />
       </Pressable>
     </Animated.View>
   )
