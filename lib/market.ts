@@ -44,8 +44,8 @@ export async function fetchTokenMarketData(mint: string): Promise<TokenMarketDat
     const sorted = [...pairs].sort((a, b) => (b.liquidity?.usd ?? 0) - (a.liquidity?.usd ?? 0))
     const pair = sorted[0]
 
-    const buys = pair.txns?.h24?.buys ?? 0
-    const sells = pair.txns?.h24?.sells ?? 0
+    const buys = pair.txns?.h24?.buys
+    const sells = pair.txns?.h24?.sells
 
     return {
       priceUsd: pair.priceUsd != null ? parseFloat(pair.priceUsd) : null,
@@ -57,7 +57,7 @@ export async function fetchTokenMarketData(mint: string): Promise<TokenMarketDat
       volume6h: pair.volume?.h6 ?? null,
       liquidity: pair.liquidity?.usd ?? null,
       fdv: pair.fdv ?? null,
-      txns24h: buys + sells,
+      txns24h: buys != null && sells != null ? buys + sells : null,
       buys24h: pair.txns?.h24?.buys ?? null,
       sells24h: pair.txns?.h24?.sells ?? null,
       pairAddress: pair.pairAddress ?? null,

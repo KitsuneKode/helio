@@ -159,17 +159,22 @@ export default function TokenDetailScreen() {
   }))
 
   useEffect(() => {
+    let cancelled = false
     heroOpacity.value = withTiming(1, { duration: 400 })
     heroTranslate.value = withTiming(0, { duration: 400 })
 
     // Parallel fetch: market data + Jupiter detail
     Promise.all([fetchTokenMarketData(mint), fetchTokenJupiterDetail(mint)]).then(
       ([market, detail]) => {
+        if (cancelled) return
         setMarketData(market)
         setJupiterDetail(detail)
         setDataLoading(false)
       },
     )
+    return () => {
+      cancelled = true
+    }
   }, [mint])
 
   // Derived values
@@ -290,7 +295,7 @@ export default function TokenDetailScreen() {
               <View className="flex-row gap-2 py-1">
                 {[
                   {
-                    label: 'Market Cap',
+                    label: 'FDV',
                     value: marketData?.fdv != null ? formatUsd(marketData.fdv) : null,
                   },
                   {
