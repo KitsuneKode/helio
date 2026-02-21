@@ -1,21 +1,33 @@
 export type TokenMarketData = {
   priceUsd: number | null
-  priceChange24h: number | null // % e.g. +4.2
-  volume24h: number | null // USD
-  liquidity: number | null // USD
-  fdv: number | null // fully diluted valuation
-  txns24h: number | null // buys + sells
+  priceChange5m: number | null   // NEW: 5-minute change %
+  priceChange1h: number | null   // NEW: 1-hour change %
+  priceChange6h: number | null   // NEW: 6-hour change %
+  priceChange24h: number | null
+  volume24h: number | null
+  volume6h: number | null        // NEW: 6-hour volume USD
+  liquidity: number | null
+  fdv: number | null
+  txns24h: number | null
+  buys24h: number | null         // NEW: buy transactions count
+  sells24h: number | null        // NEW: sell transactions count
   pairAddress: string | null
   dexId: string | null
 }
 
 const EMPTY: TokenMarketData = {
   priceUsd: null,
+  priceChange5m: null,
+  priceChange1h: null,
+  priceChange6h: null,
   priceChange24h: null,
   volume24h: null,
+  volume6h: null,
   liquidity: null,
   fdv: null,
   txns24h: null,
+  buys24h: null,
+  sells24h: null,
   pairAddress: null,
   dexId: null,
 }
@@ -37,11 +49,17 @@ export async function fetchTokenMarketData(mint: string): Promise<TokenMarketDat
 
     return {
       priceUsd: pair.priceUsd != null ? parseFloat(pair.priceUsd) : null,
+      priceChange5m: pair.priceChange?.m5 ?? null,
+      priceChange1h: pair.priceChange?.h1 ?? null,
+      priceChange6h: pair.priceChange?.h6 ?? null,
       priceChange24h: pair.priceChange?.h24 ?? null,
       volume24h: pair.volume?.h24 ?? null,
+      volume6h: pair.volume?.h6 ?? null,
       liquidity: pair.liquidity?.usd ?? null,
       fdv: pair.fdv ?? null,
       txns24h: buys + sells,
+      buys24h: pair.txns?.h24?.buys ?? null,
+      sells24h: pair.txns?.h24?.sells ?? null,
       pairAddress: pair.pairAddress ?? null,
       dexId: pair.dexId ?? null,
     }
