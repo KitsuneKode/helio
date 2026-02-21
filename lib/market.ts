@@ -1,16 +1,16 @@
 export type TokenMarketData = {
   priceUsd: number | null
-  priceChange5m: number | null   // NEW: 5-minute change %
-  priceChange1h: number | null   // NEW: 1-hour change %
-  priceChange6h: number | null   // NEW: 6-hour change %
-  priceChange24h: number | null
-  volume24h: number | null
-  volume6h: number | null        // NEW: 6-hour volume USD
-  liquidity: number | null
-  fdv: number | null
-  txns24h: number | null
-  buys24h: number | null         // NEW: buy transactions count
-  sells24h: number | null        // NEW: sell transactions count
+  priceChange5m: number | null   // % change over 5 minutes
+  priceChange1h: number | null   // % change over 1 hour
+  priceChange6h: number | null   // % change over 6 hours
+  priceChange24h: number | null  // % e.g. +4.2
+  volume24h: number | null       // USD
+  volume6h: number | null        // USD
+  liquidity: number | null       // USD
+  fdv: number | null             // fully diluted valuation
+  txns24h: number | null         // buys + sells
+  buys24h: number | null         // buy transaction count
+  sells24h: number | null        // sell transaction count
   pairAddress: string | null
   dexId: string | null
 }
