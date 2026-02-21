@@ -10,11 +10,7 @@ type MarketStatProps = {
 }
 
 function MarketStat({ label, value, positive, negative }: MarketStatProps) {
-  const valueColor = positive
-    ? 'text-green-500'
-    : negative
-      ? 'text-destructive'
-      : 'text-foreground'
+  const valueColor = positive ? 'text-green-500' : negative ? 'text-destructive' : 'text-foreground'
 
   return (
     <View className="flex-1 gap-1">

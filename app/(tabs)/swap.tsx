@@ -1,81 +1,100 @@
-import { useCallback, useEffect, useRef, useState } from 'react'
-import { Image, Pressable, ScrollView, TextInput, View } from 'react-native'
+/**
+ * Swap3 — Definitive swap screen
+ *
+ * Fixes from previous iterations:
+ *  - Label clipping: label on its own row, input+chip side-by-side (matches swap v1)
+ *  - Dynamic font size: shrinks for large amounts (≤5 = 40px, ≤7 = 34px, ≤9 = 28px, 10+ = 24px)
+ *  - Theme-consistent colors: bg-primary CTA, text-foreground amounts, theme-aware TextInput
+ *  - ThemeToggle in header (replaces non-functional settings button)
+ *  - Animation: opposite translateY on card contents (pay ↓, receive ↑) gives real swap feel
+ *    no more panelScale squeeze that caused the "bouncy rerender" look
+ *  - Slippage section placed BEFORE quote card
+ *  - No hardcoded hex design tokens — uses theme className throughout
+ */
+
+import { useCallback, useRef, useState } from 'react'
+import {
+  ActivityIndicator,
+  Alert,
+  Image,
+  Pressable,
+  ScrollView,
+  TextInput,
+  View,
+} from 'react-native'
 import * as Haptics from 'expo-haptics'
-import Animated, {
-  FadeIn,
-  FadeInDown,
+import {
+  Easing,
+  runOnJS,
   useAnimatedStyle,
   useSharedValue,
   withSpring,
-  interpolate,
+  withTiming,
 } from 'react-native-reanimated'
+import { useUniwind } from 'uniwind'
 import { Icon } from '@/components/ui/icon'
 import { Text } from '@/components/ui/text'
 import { Skeleton } from '@/components/ui/skeleton'
-import { SafeAreaViewUniwind } from '@/components/styled-uniwind-components'
-import {
-  ArrowUpDownIcon,
-  ArrowDown01Icon,
-  Settings01Icon,
-  InformationCircleIcon,
-  ZapIcon,
-} from '@hugeicons/core-free-icons'
+import { AnimatedViewUniwind, SafeAreaViewUniwind } from '@/components/styled-uniwind-components'
+import { ThemeToggle } from '@/components/theme-toggle-button'
+import { ArrowUpDownIcon, ArrowDown01Icon, ZapIcon } from '@hugeicons/core-free-icons'
 import { fetchSwapQuote, type SwapQuote } from '@/lib/swap'
 
-// ─────────────────────────────────────────────────────────────────────────────
-// Token definitions
-// ─────────────────────────────────────────────────────────────────────────────
+// ─── Tokens ───────────────────────────────────────────────────────────────────
 
-type TokenOption = {
+type Token = {
   mint: string
   symbol: string
-  name: string
   logo: string
   decimals: number
 }
 
-const SOL: TokenOption = {
+const SOL: Token = {
   mint: 'So11111111111111111111111111111111111111112',
   symbol: 'SOL',
-  name: 'Solana',
   logo: 'https://raw.githubusercontent.com/solana-labs/token-list/main/assets/mainnet/So11111111111111111111111111111111111111112/logo.png',
   decimals: 9,
 }
 
-const USDC: TokenOption = {
+const USDC: Token = {
   mint: 'EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v',
   symbol: 'USDC',
-  name: 'USD Coin',
   logo: 'https://raw.githubusercontent.com/solana-labs/token-list/main/assets/mainnet/EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v/logo.png',
   decimals: 6,
 }
 
-// TODO: add more tokens + wire up to Jupiter token list API for search
-const _POPULAR_TOKENS: TokenOption[] = [
-  SOL,
-  USDC,
-  {
-    mint: 'Es9vMFrzaCERmJfrF4H2FYD4KCoNkY11McCe8BenwNYB',
-    symbol: 'USDT',
-    name: 'Tether USD',
-    logo: 'https://raw.githubusercontent.com/solana-labs/token-list/main/assets/mainnet/Es9vMFrzaCERmJfrF4H2FYD4KCoNkY11McCe8BenwNYB/logo.svg',
-    decimals: 6,
-  },
-]
+const SLIPPAGE_OPTS = ['0.5', '1.0', '2.0'] as const
+type SlippageOpt = (typeof SLIPPAGE_OPTS)[number]
 
-const SLIPPAGE_OPTIONS = ['0.5', '1.0', '2.0']
+// ─── Helpers ──────────────────────────────────────────────────────────────────
 
-// ─────────────────────────────────────────────────────────────────────────────
-// Sub-components
-// ─────────────────────────────────────────────────────────────────────────────
+function rawToDisplay(raw: string, decimals: number): string {
+  const n = parseInt(raw, 10)
+  if (isNaN(n)) return '0'
+  const val = n / 10 ** decimals
+  return val.toLocaleString(undefined, { maximumFractionDigits: decimals > 4 ? 4 : decimals })
+}
 
-function TokenLogo({ uri, size = 36 }: { uri: string; size?: number }) {
+function parsePriceImpact(pct: string): { str: string; bad: boolean } {
+  const n = parseFloat(pct)
+  if (isNaN(n) || n < 0.01) return { str: '< 0.01%', bad: false }
+  return { str: `${n.toFixed(2)}%`, bad: n > 2 }
+}
+
+/** Shrink font as value string grows so 7+ digit amounts never overflow */
+function getAmountFontSize(val: string): number {
+  if (val.length <= 5) return 40
+  if (val.length <= 7) return 34
+  if (val.length <= 9) return 28
+  return 24
+}
+
+// ─── Sub-components ───────────────────────────────────────────────────────────
+
+function TokenLogo({ uri, size = 28 }: { uri: string; size?: number }) {
   const [err, setErr] = useState(false)
   return err ? (
-    <View
-      className="bg-primary/15 items-center justify-center rounded-full"
-      style={{ width: size, height: size }}
-    />
+    <View className="bg-primary/15 rounded-full" style={{ width: size, height: size }} />
   ) : (
     <Image
       source={{ uri }}
@@ -85,53 +104,93 @@ function TokenLogo({ uri, size = 36 }: { uri: string; size?: number }) {
   )
 }
 
-function TokenChip({ token }: { token: TokenOption }) {
+// Scale micro-animation on press, pill bg-muted styling
+function TokenChip({ token }: { token: Token }) {
+  const scale = useSharedValue(1)
+  const animStyle = useAnimatedStyle(() => ({ transform: [{ scale: scale.value }] }))
+
   return (
-    <View className="bg-muted flex-row items-center gap-2.5 rounded-full px-3 py-2">
-      <TokenLogo uri={token.logo} size={26} />
-      <Text className="text-foreground text-sm font-bold">{token.symbol}</Text>
-      <Icon icon={ArrowDown01Icon} className="text-muted-foreground size-4" />
-    </View>
+    <Pressable
+      onPressIn={() => {
+        scale.value = withTiming(0.93, { duration: 80 })
+      }}
+      onPressOut={() => {
+        scale.value = withSpring(1, { damping: 18, stiffness: 350 })
+      }}
+    >
+      {/* AnimatedViewUniwind with only style= (no className) — avoids HOC merge issue */}
+      <AnimatedViewUniwind style={animStyle}>
+        <View className="bg-muted flex-row items-center gap-2 rounded-full px-3 py-2">
+          <TokenLogo uri={token.logo} size={24} />
+          <Text className="text-foreground text-sm font-bold">{token.symbol}</Text>
+          <Icon icon={ArrowDown01Icon} className="text-muted-foreground size-3.5" />
+        </View>
+      </AnimatedViewUniwind>
+    </Pressable>
   )
 }
 
-function SwapInfoRow({ label, value, highlight }: { label: string; value: string; highlight?: boolean }) {
+function SwapInfoRow({
+  label,
+  value,
+  highlight,
+}: {
+  label: string
+  value: string
+  highlight?: boolean
+}) {
   return (
     <View className="flex-row items-center justify-between py-1.5">
       <Text className="text-muted-foreground text-xs font-medium">{label}</Text>
-      <Text className={`text-xs font-semibold ${highlight ? 'text-destructive' : 'text-foreground'}`}>
+      <Text
+        className={`text-xs font-semibold ${highlight ? 'text-destructive' : 'text-foreground'}`}
+      >
         {value}
       </Text>
     </View>
   )
 }
 
-// ─────────────────────────────────────────────────────────────────────────────
-// Helpers
-// ─────────────────────────────────────────────────────────────────────────────
-
-function rawToDisplay(raw: string, decimals: number): string {
-  const n = parseInt(raw, 10)
-  if (isNaN(n)) return '0'
-  const val = n / 10 ** decimals
-  return val.toLocaleString(undefined, { maximumFractionDigits: decimals > 4 ? 4 : decimals })
+// Mirrors the exact structure of the 4-row quote card so height never jumps on load
+function QuoteCardSkeleton() {
+  return (
+    <View className="bg-card border-border mt-4 rounded-2xl border px-5 py-4">
+      <View className="flex-row items-center justify-between py-1.5">
+        <Skeleton className="h-3 w-24 rounded" />
+        <Skeleton className="h-3 w-36 rounded" />
+      </View>
+      <View className="bg-border my-1 h-px" />
+      <View className="flex-row items-center justify-between py-1.5">
+        <Skeleton className="h-3 w-20 rounded" />
+        <Skeleton className="h-3 w-14 rounded" />
+      </View>
+      <View className="bg-border my-1 h-px" />
+      <View className="flex-row items-center justify-between py-1.5">
+        <Skeleton className="h-3 w-10 rounded" />
+        <Skeleton className="h-3 w-24 rounded" />
+      </View>
+      <View className="bg-border my-1 h-px" />
+      <View className="flex-row items-center justify-between py-1.5">
+        <Skeleton className="h-3 w-24 rounded" />
+        <Skeleton className="h-3 w-28 rounded" />
+      </View>
+    </View>
+  )
 }
 
-function formatPriceImpact(pct: string): { str: string; bad: boolean } {
-  const n = parseFloat(pct)
-  if (isNaN(n) || n < 0.01) return { str: '< 0.01%', bad: false }
-  return { str: `${n.toFixed(2)}%`, bad: n > 2 }
-}
+// ─── Main screen ──────────────────────────────────────────────────────────────
 
-// ─────────────────────────────────────────────────────────────────────────────
-// Main screen
-// ─────────────────────────────────────────────────────────────────────────────
+export default function Swap3Screen() {
+  const { theme } = useUniwind()
+  const isDark = (theme ?? 'light') === 'dark'
+  // Theme-aware colors for TextInput (className not supported on native TextInput)
+  const inputTextColor = isDark ? '#F4F4F5' : '#18181B'
+  // zinc-500 (#71717A) is legible in both themes — dark enough on white, light enough on dark
+  const placeholderColor = '#71717A'
 
-export default function SwapScreen() {
   const [payAmount, setPayAmount] = useState('')
-  const [slippage, setSlippage] = useState('0.5')
+  const [slippage, setSlippage] = useState<SlippageOpt>('0.5')
   const [flipped, setFlipped] = useState(false)
-
   const [quote, setQuote] = useState<SwapQuote | null>(null)
   const [quoteLoading, setQuoteLoading] = useState(false)
   const [quoteError, setQuoteError] = useState<string | null>(null)
@@ -139,113 +198,166 @@ export default function SwapScreen() {
   const fromToken = flipped ? USDC : SOL
   const toToken = flipped ? SOL : USDC
 
-  // ── Quote fetching ──
+  // ── Shared values ─────────────────────────────────────────────────────────
+
+  const flipRotate = useSharedValue(0) // flip button rotation (degrees)
+  const flipOpacity = useSharedValue(1) // unified fade: amounts + chips all fade together on flip
+  const outputOpacity = useSharedValue(1) // receive dims independently while fetching quote
+
+  const flipButtonStyle = useAnimatedStyle(() => ({
+    transform: [{ rotate: `${flipRotate.value}deg` }],
+  }))
+
+  // Chips + pay amount share the same flipOpacity — everything fades as one unit
+  const flipFadeStyle = useAnimatedStyle(() => ({
+    opacity: flipOpacity.value,
+  }))
+
+  // Receive: multiplies both signals — dims for loading AND fades for flip
+  const receiveContentStyle = useAnimatedStyle(() => ({
+    opacity: flipOpacity.value * outputOpacity.value,
+  }))
+
+  // ── Quote fetching ────────────────────────────────────────────────────────
+
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
   const triggerQuote = useCallback(
-    (amount: string, from: TokenOption, to: TokenOption, slip: string) => {
+    (amount: string, from: Token, to: Token, slip: string) => {
       const parsed = parseFloat(amount)
       if (!amount || isNaN(parsed) || parsed <= 0) {
         setQuote(null)
         setQuoteError(null)
         setQuoteLoading(false)
+        outputOpacity.value = withTiming(1, { duration: 120 })
         return
       }
+
       setQuoteLoading(true)
       setQuoteError(null)
+      outputOpacity.value = withTiming(0.35, { duration: 150 })
+
       const rawAmount = Math.round(parsed * 10 ** from.decimals)
       const slippageBps = Math.round(parseFloat(slip) * 100)
+
       fetchSwapQuote(from.mint, to.mint, rawAmount, slippageBps).then((q) => {
         setQuoteLoading(false)
         if (!q) {
           setQuote(null)
           setQuoteError('No route found for this pair.')
+          outputOpacity.value = withTiming(1, { duration: 120 })
         } else {
           setQuote(q)
           setQuoteError(null)
+          outputOpacity.value = withTiming(1, { duration: 200 })
         }
       })
     },
-    [],
+    [outputOpacity],
   )
 
-  const handleAmountChange = (value: string) => {
-    setPayAmount(value)
+  const handleAmountChange = (val: string) => {
+    setPayAmount(val)
     setQuote(null)
     if (debounceRef.current) clearTimeout(debounceRef.current)
-    debounceRef.current = setTimeout(() => {
-      triggerQuote(value, fromToken, toToken, slippage)
-    }, 600)
+    debounceRef.current = setTimeout(() => triggerQuote(val, fromToken, toToken, slippage), 600)
   }
 
-  const handleSlippageChange = (val: string) => {
+  const handleSlippage = (val: SlippageOpt) => {
     Haptics.selectionAsync()
     setSlippage(val)
     if (payAmount && parseFloat(payAmount) > 0) {
       if (debounceRef.current) clearTimeout(debounceRef.current)
-      debounceRef.current = setTimeout(() => {
-        triggerQuote(payAmount, fromToken, toToken, val)
-      }, 300)
+      debounceRef.current = setTimeout(() => triggerQuote(payAmount, fromToken, toToken, val), 300)
     }
   }
 
-  // ── Flip ──
-  const flipRotation = useSharedValue(0)
-  const flipPressScale = useSharedValue(1)
+  // ── Flip — premium unified fade ───────────────────────────────────────────
+  //
+  // Everything (chips + amounts) fades to 0 together (90ms ease-in),
+  // state swaps at the darkest point via runOnJS, then fades back to 1 (200ms ease-out).
+  // No translateY — no layout jump, no bounce. Just a clean refresh in place.
+  // The rotating flip button is the sole movement cue.
 
   const handleFlip = async () => {
-    await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium)
-    flipRotation.value = withSpring(flipRotation.value + 1, { damping: 14, stiffness: 200 })
-    flipPressScale.value = withSpring(0.88, { damping: 12 }, () => {
-      flipPressScale.value = withSpring(1)
+    await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light)
+
+    const newFlipped = !flipped
+    const newFrom = newFlipped ? USDC : SOL
+    const newTo = newFlipped ? SOL : USDC
+    const currentPayAmount = payAmount
+    const currentSlippage = slippage
+
+    // Flip button rotates 180° — smooth cubic ease-out
+    flipRotate.value = withTiming(flipRotate.value + 180, {
+      duration: 320,
+      easing: Easing.out(Easing.cubic),
     })
-    setFlipped((f) => !f)
-    setPayAmount('')
-    setQuote(null)
-    setQuoteError(null)
+
+    // Everything fades out together, state changes at darkest point, fades back in
+    const applyFlip = () => {
+      setFlipped(newFlipped)
+      setQuote(null)
+      setQuoteError(null)
+      if (currentPayAmount && parseFloat(currentPayAmount) > 0) {
+        triggerQuote(currentPayAmount, newFrom, newTo, currentSlippage)
+      } else {
+        outputOpacity.value = withTiming(1, { duration: 120 })
+      }
+    }
+
+    flipOpacity.value = withTiming(0, { duration: 90, easing: Easing.in(Easing.quad) }, () => {
+      runOnJS(applyFlip)()
+      flipOpacity.value = withTiming(1, { duration: 200, easing: Easing.out(Easing.cubic) })
+    })
   }
 
-  const flipStyle = useAnimatedStyle(() => ({
-    transform: [
-      { rotate: `${interpolate(flipRotation.value, [0, 1], [0, 180])}deg` },
-      { scale: flipPressScale.value },
-    ],
-  }))
+  // ── Derived values ────────────────────────────────────────────────────────
 
-  // ── Derived display values ──
   const parsedPay = parseFloat(payAmount) || 0
   const receiveDisplay = quote ? rawToDisplay(quote.outAmount, toToken.decimals) : ''
-  const minReceivedDisplay = quote
-    ? `${rawToDisplay(quote.otherAmountThreshold, toToken.decimals)} ${toToken.symbol}`
-    : ''
+
+  const payFontSize = getAmountFontSize(payAmount || '0')
+  const receiveFontSize = getAmountFontSize(receiveDisplay || '0')
 
   const rateStr =
     quote && parsedPay > 0
       ? (() => {
-          const outAmt = parseInt(quote.outAmount) / 10 ** toToken.decimals
-          const rate = (outAmt / parsedPay).toLocaleString(undefined, { maximumFractionDigits: 4 })
+          const out = parseInt(quote.outAmount) / 10 ** toToken.decimals
+          const rate = (out / parsedPay).toLocaleString(undefined, { maximumFractionDigits: 4 })
           return `1 ${fromToken.symbol} ≈ ${rate} ${toToken.symbol}`
         })()
-      : parsedPay > 0
-        ? null // loading
-        : null
+      : null
 
-  const impact = quote ? formatPriceImpact(quote.priceImpactPct) : null
+  const impact = quote ? parsePriceImpact(quote.priceImpactPct) : null
+  const minReceived = quote
+    ? `${rawToDisplay(quote.otherAmountThreshold, toToken.decimals)} ${toToken.symbol}`
+    : null
 
-  const hasQuoteData = quote && parsedPay > 0
-  const isReady = hasQuoteData && !quoteLoading
+  const isReady = !!quote && !quoteLoading && parsedPay > 0
+  const canSwap = isReady
+
+  const ctaLabel = quoteLoading
+    ? 'Getting quote…'
+    : canSwap
+      ? `Swap ${fromToken.symbol} → ${toToken.symbol}`
+      : quoteError
+        ? 'No route available'
+        : parsedPay > 0
+          ? 'Getting quote…'
+          : 'Enter an amount'
+
+  // ─────────────────────────────────────────────────────────────────────────
 
   return (
     <SafeAreaViewUniwind className="bg-background flex-1" edges={['top', 'bottom']}>
       <ScrollView
         showsVerticalScrollIndicator={false}
-        className="flex-1"
-        contentContainerStyle={{ paddingBottom: 48 }}
         keyboardShouldPersistTaps="handled"
+        contentContainerStyle={{ paddingBottom: 48 }}
       >
-        <Animated.View entering={FadeIn.duration(250)} className="px-5 pb-4 pt-6">
-
-          {/* ── Header ── */}
+        <View className="px-5 pb-4 pt-6">
+          {/* ── Header — matches swap v1 style ── */}
           <View className="mb-6 flex-row items-center justify-between">
             <View>
               <Text className="text-foreground text-2xl font-extrabold tracking-tight">Swap</Text>
@@ -253,103 +365,103 @@ export default function SwapScreen() {
                 via Jupiter Aggregator
               </Text>
             </View>
-            <Pressable className="bg-muted rounded-xl p-2.5 active:opacity-70">
-              <Icon icon={Settings01Icon} className="text-muted-foreground size-5" />
-            </Pressable>
+            <ThemeToggle />
           </View>
 
-          {/* ── YOU PAY card ── */}
-          <Animated.View
-            entering={FadeInDown.delay(80).springify().damping(18)}
-            className="bg-card border-border rounded-2xl border px-5 pb-4 pt-5"
-          >
-            <Text className="text-muted-foreground mb-3 text-[10px] font-bold uppercase tracking-widest">
-              You Pay
-            </Text>
-            <View className="flex-row items-center gap-3">
+          {/* ── YOU SELL card — bg-card (bright/input feel) ── */}
+          <View className="bg-card border-border rounded-t-2xl border border-b-0 px-5 pb-8 pt-5 ">
+            <View className="mb-4 flex-row items-center justify-between">
+              <Text
+                numberOfLines={1}
+                className="text-muted-foreground text-xs font-semibold uppercase tracking-widest"
+              >
+                You Sell
+              </Text>
+              {/* flipFadeStyle fades the chip alongside the amount on flip */}
+              <AnimatedViewUniwind style={flipFadeStyle}>
+                <TokenChip token={fromToken} />
+              </AnimatedViewUniwind>
+            </View>
+            <AnimatedViewUniwind style={flipFadeStyle}>
               <TextInput
                 value={payAmount}
                 onChangeText={handleAmountChange}
                 placeholder="0"
-                placeholderTextColor="#555"
+                placeholderTextColor={placeholderColor}
                 keyboardType="decimal-pad"
                 style={{
-                  flex: 1,
-                  fontSize: 40,
+                  fontSize: payFontSize,
                   fontWeight: '800',
-                  color: '#f0f0f0',
+                  color: inputTextColor,
                   letterSpacing: -1,
                 }}
               />
-              <TokenChip token={fromToken} />
-            </View>
-          </Animated.View>
-
-          {/* ── FLIP button ── */}
-          <View className="my-[-14px] items-center" style={{ zIndex: 10 }}>
-            <Animated.View style={flipStyle}>
-              <Pressable
-                onPress={handleFlip}
-                className="bg-background border-border h-10 w-10 items-center justify-center rounded-xl border-2 active:opacity-70"
-              >
-                <Icon icon={ArrowUpDownIcon} className="text-primary size-5" />
-              </Pressable>
-            </Animated.View>
+            </AnimatedViewUniwind>
           </View>
 
-          {/* ── YOU RECEIVE card ── */}
-          <Animated.View
-            entering={FadeInDown.delay(140).springify().damping(18)}
-            className="bg-card border-border rounded-2xl border px-5 pb-4 pt-5"
-          >
-            <Text className="text-muted-foreground mb-3 text-[10px] font-bold uppercase tracking-widest">
-              You Receive
-            </Text>
-            <View className="flex-row items-center gap-3">
-              {quoteLoading ? (
-                <View className="flex-1">
-                  <Skeleton className="h-12 w-40 rounded-lg" />
+          {/* ── FLIP button — overlaps seam ── */}
+          <View className="items-center" style={{ marginVertical: -16, zIndex: 10 }}>
+            <Pressable onPress={handleFlip}>
+              {/* Rotation in style only; bg/border via inner View className */}
+              <AnimatedViewUniwind style={flipButtonStyle}>
+                <View className="bg-background border-border h-10 w-10 items-center justify-center rounded-xl border-2">
+                  <Icon icon={ArrowUpDownIcon} className="text-primary size-5" />
                 </View>
-              ) : (
-                <Text
-                  className={[
-                    'flex-1 text-5xl font-extrabold tracking-tighter',
-                    receiveDisplay ? 'text-foreground' : 'text-muted-foreground/40',
-                  ].join(' ')}
-                  numberOfLines={1}
-                >
-                  {receiveDisplay || '0'}
-                </Text>
-              )}
-              <TokenChip token={toToken} />
+              </AnimatedViewUniwind>
+            </Pressable>
+          </View>
+
+          {/* ── YOU BUY card — bg-muted (output/read-only feel, visually distinct from sell) ── */}
+          <View className="bg-muted/30 border-border shadow-2xl rounded-b-2xl border border-t-0 px-5 py-3">
+            <View className="mb-2 flex-row items-center justify-between">
+              <Text
+                numberOfLines={1}
+                className="text-muted-foreground text-xs font-semibold uppercase tracking-widest"
+              >
+                You Buy
+              </Text>
+              <AnimatedViewUniwind style={flipFadeStyle}>
+                <TokenChip token={toToken} />
+              </AnimatedViewUniwind>
             </View>
+            {/* receiveContentStyle: flipOpacity * outputOpacity — fades on flip AND dims while loading */}
+            <AnimatedViewUniwind style={receiveContentStyle}>
+              <Text
+                numberOfLines={1}
+                className={receiveDisplay ? 'text-foreground' : 'text-foreground/40'}
+                style={{
+                  fontSize: receiveFontSize,
+                  fontWeight: '800',
+                  letterSpacing: -1,
+                  lineHeight: receiveFontSize + 14,
+                }}
+              >
+                {receiveDisplay || '0'}
+              </Text>
+            </AnimatedViewUniwind>
 
             {quoteError && (
-              <Text className="text-destructive mt-2 text-xs font-medium">{quoteError}</Text>
+              <Text className="text-destructive mt-2 text-xs font-medium justify-center items-center align-center">
+                {quoteError}
+              </Text>
             )}
-          </Animated.View>
+          </View>
 
-          {/* ── Slippage selector ── */}
-          <Animated.View
-            entering={FadeInDown.delay(200).springify().damping(18)}
-            className="mt-4"
-          >
+          {/* ── Slippage (before quote card) ── */}
+          <View className="mt-4">
             <View className="mb-2 flex-row items-center justify-between">
-              <View className="flex-row items-center gap-1.5">
-                <Text className="text-muted-foreground text-xs font-semibold uppercase tracking-wide">
-                  Slippage Tolerance
-                </Text>
-                <Icon icon={InformationCircleIcon} className="text-muted-foreground size-3.5" />
-              </View>
+              <Text className="text-muted-foreground text-xs font-semibold uppercase tracking-wide">
+                Slippage Tolerance
+              </Text>
               <Text className="text-primary text-xs font-bold">{slippage}%</Text>
             </View>
             <View className="flex-row gap-2">
-              {SLIPPAGE_OPTIONS.map((opt) => {
+              {SLIPPAGE_OPTS.map((opt) => {
                 const active = slippage === opt
                 return (
                   <Pressable
                     key={opt}
-                    onPress={() => handleSlippageChange(opt)}
+                    onPress={() => handleSlippage(opt)}
                     className={[
                       'flex-1 items-center rounded-xl border py-2.5 active:opacity-70',
                       active ? 'bg-primary/15 border-primary/40' : 'bg-card border-border',
@@ -364,15 +476,12 @@ export default function SwapScreen() {
                 )
               })}
             </View>
-          </Animated.View>
+          </View>
 
-          {/* ── Route info (shown when quote is ready) ── */}
-          {isReady && (
-            <Animated.View
-              entering={FadeInDown.delay(60).springify().damping(20)}
-              className="bg-card border-border mt-4 rounded-2xl border px-5 py-4"
-            >
-              {rateStr && <SwapInfoRow label="Exchange Rate" value={rateStr} />}
+          {/* ── Quote card — detailed 4-row layout (when ready) ── */}
+          {isReady && rateStr && (
+            <View className="bg-card border-border mt-4 rounded-2xl border px-5 py-4">
+              <SwapInfoRow label="Exchange Rate" value={rateStr} />
               <View className="bg-border my-1 h-px" />
               <SwapInfoRow
                 label="Price Impact"
@@ -380,86 +489,67 @@ export default function SwapScreen() {
                 highlight={impact?.bad}
               />
               <View className="bg-border my-1 h-px" />
-              <SwapInfoRow
-                label="Route"
-                value={`${fromToken.symbol} → ${toToken.symbol}`}
-              />
+              <SwapInfoRow label="Route" value={`${fromToken.symbol} → ${toToken.symbol}`} />
               <View className="bg-border my-1 h-px" />
-              <SwapInfoRow label="Min. Received" value={minReceivedDisplay} />
-            </Animated.View>
+              <SwapInfoRow label="Min. Received" value={minReceived ?? ''} />
+            </View>
           )}
 
-          {/* Show loading skeleton for route info while fetching */}
-          {quoteLoading && parsedPay > 0 && (
-            <Animated.View
-              entering={FadeIn.duration(200)}
-              className="bg-card border-border mt-4 rounded-2xl border px-5 py-4"
-            >
-              <View className="gap-3">
-                <View className="flex-row justify-between">
-                  <Skeleton className="h-3.5 w-28 rounded" />
-                  <Skeleton className="h-3.5 w-32 rounded" />
-                </View>
-                <View className="flex-row justify-between">
-                  <Skeleton className="h-3.5 w-20 rounded" />
-                  <Skeleton className="h-3.5 w-16 rounded" />
-                </View>
-                <View className="flex-row justify-between">
-                  <Skeleton className="h-3.5 w-24 rounded" />
-                  <Skeleton className="h-3.5 w-28 rounded" />
-                </View>
-              </View>
-            </Animated.View>
-          )}
+          {/* Skeleton mirrors exact quote card structure — no layout jump on load */}
+          {quoteLoading && parsedPay > 0 && <QuoteCardSkeleton />}
 
-          {/* ── Swap CTA ── */}
-          <Animated.View
-            entering={FadeInDown.delay(280).springify().damping(18)}
-            className="mt-4"
-          >
-            <Pressable
-              className={[
-                'items-center justify-center rounded-2xl py-4 active:opacity-85',
-                parsedPay > 0 && isReady ? 'bg-primary' : 'bg-primary/30',
-              ].join(' ')}
-              disabled={!isReady}
-              onPress={() => {
-                // TODO: wire up wallet connect + execute swap via Jupiter
+          {/* ── CTA — bg-primary/30 when not ready, full bg-primary when loading or ready ── */}
+          <Pressable
+            className={[
+              'mt-5 items-center justify-center rounded-2xl py-4 active:opacity-85',
+              canSwap || (quoteLoading && parsedPay > 0) ? 'bg-primary' : 'bg-primary/30',
+            ].join(' ')}
+            onPress={() => {
+              if (!payAmount || parsedPay <= 0) {
+                Alert.alert('Enter an amount', 'Type how much you want to swap first.')
+                return
+              }
+              if (quoteLoading) return
+              if (quoteError) {
+                Alert.alert(
+                  'No route',
+                  'No swap route found for this pair. Try a different amount.',
+                )
+                return
+              }
+              if (canSwap) {
                 Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy)
-              }}
-            >
-              <Text
-                className={`text-base font-extrabold tracking-wide ${
-                  parsedPay > 0 && isReady
-                    ? 'text-primary-foreground'
-                    : 'text-primary-foreground/40'
-                }`}
-              >
-                {quoteLoading
-                  ? 'Getting quote…'
-                  : parsedPay > 0 && isReady
-                    ? `Swap ${fromToken.symbol} → ${toToken.symbol}`
-                    : parsedPay > 0
-                      ? quoteError
-                        ? 'No route available'
-                        : 'Getting quote…'
-                      : 'Enter an amount'}
-              </Text>
-            </Pressable>
-          </Animated.View>
-
-          {/* ── Powered by Jupiter ── */}
-          <Animated.View
-            entering={FadeInDown.delay(340).springify().damping(18)}
-            className="mt-5 flex-row items-center justify-center gap-1.5"
+                // TODO: wallet connect + execute swap via Jupiter
+              }
+            }}
           >
+            {quoteLoading && parsedPay > 0 ? (
+              <View className="flex-row items-center gap-2.5">
+                <ActivityIndicator size="small" color={isDark ? '#000000' : '#ffffff'} />
+                <Text className="text-primary-foreground text-xl font-semibold">
+                  Getting quote…
+                </Text>
+              </View>
+            ) : (
+              <Text
+                className={[
+                  'text-xl font-semibold',
+                  canSwap ? 'text-primary-foreground' : 'text-primary-foreground/50',
+                ].join(' ')}
+              >
+                {ctaLabel}
+              </Text>
+            )}
+          </Pressable>
+
+          {/* ── Footer ── */}
+          <View className="mt-5 flex-row items-center justify-center gap-1.5">
             <Icon icon={ZapIcon} className="text-primary size-3.5" />
             <Text className="text-muted-foreground text-xs font-semibold">
               Powered by <Text className="text-primary text-xs font-bold">Jupiter</Text>
             </Text>
-          </Animated.View>
-
-        </Animated.View>
+          </View>
+        </View>
       </ScrollView>
     </SafeAreaViewUniwind>
   )

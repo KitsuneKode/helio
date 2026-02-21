@@ -29,9 +29,7 @@ export async function fetchTokenMarketData(mint: string): Promise<TokenMarketDat
     if (pairs.length === 0) return EMPTY
 
     // Sort by liquidity descending to get the best pair
-    const sorted = [...pairs].sort(
-      (a, b) => (b.liquidity?.usd ?? 0) - (a.liquidity?.usd ?? 0),
-    )
+    const sorted = [...pairs].sort((a, b) => (b.liquidity?.usd ?? 0) - (a.liquidity?.usd ?? 0))
     const pair = sorted[0]
 
     const buys = pair.txns?.h24?.buys ?? 0

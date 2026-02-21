@@ -56,7 +56,7 @@ export const isValidPublicKey = (pubKey: string): ValidatePublicKeyResult => {
 export const getBalance = async (rpc: SolanaRpc, pubKey: Address): Promise<GetBalanceResult> => {
   const balance = await rpc.getBalance(pubKey).send()
   return {
-    balance: Number(balance.value / LAMPORTS_PER_SOL),
+    balance: Number(balance.value) / Number(LAMPORTS_PER_SOL),
     address: pubKey.toString(),
   }
 }

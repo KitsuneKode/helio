@@ -1,6 +1,7 @@
 import { Pressable, Text } from 'react-native'
 import Animated, { useSharedValue, useAnimatedStyle, withSpring } from 'react-native-reanimated'
 import * as Haptics from 'expo-haptics'
+import { AnimatedViewUniwind } from '../styled-uniwind-components'
 
 type SwapArrowButtonProps = {
   onPress: () => void
@@ -21,7 +22,7 @@ function SwapArrowButton({ onPress }: SwapArrowButtonProps) {
 
   return (
     <Pressable onPress={handlePress} className="self-center active:opacity-70">
-      <Animated.View
+      <AnimatedViewUniwind
         style={[
           animStyle,
           {
@@ -37,7 +38,7 @@ function SwapArrowButton({ onPress }: SwapArrowButtonProps) {
         ]}
       >
         <Text style={{ fontSize: 18 }}>⇅</Text>
-      </Animated.View>
+      </AnimatedViewUniwind>
     </Pressable>
   )
 }

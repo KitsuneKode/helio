@@ -187,7 +187,7 @@ const TransactionScreen = () => {
 
   const handleTokenPress = (token: GetTokensResult[number]) => {
     router.push({
-      pathname: '/token-antigravity/[mint]',
+      pathname: '/token/[mint]',
       params: {
         mint: token.mint,
         amount: String(token.amount),
@@ -199,7 +199,7 @@ const TransactionScreen = () => {
   }
 
   const handleTransactionPress = (signature: string) => {
-    router.push({ pathname: '/transaction-antigravity/[signature]', params: { signature } })
+    router.push({ pathname: '/transaction/[signature]', params: { signature } })
   }
 
   return (
@@ -230,7 +230,7 @@ const TransactionScreen = () => {
           <View className="flex-1 gap-4">
             <View className="flex-1 gap-2">
               <LabelUniwind
-                className="text-muted-foreground/75 mx-2 text-[1.25rem]"
+                className="text-muted-foreground mx-2 text-[1.25rem]"
                 htmlFor="input"
                 nativeID="input"
               >
@@ -239,7 +239,8 @@ const TransactionScreen = () => {
               <Input
                 id="input"
                 className="border-input ring-muted h-14 ring-1"
-                placeholder="83astBRguLMdt2h...."
+                placeholder=" 83astBRguLMdt2h...."
+                placeholderTextColor="#B4B4BC"
                 value={value}
                 onChangeText={handleChangeValue}
                 returnKeyType="done"
