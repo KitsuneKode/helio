@@ -21,7 +21,8 @@ export function ThemeToggle() {
       onPressIn={toggleTheme}
       size="icon"
       variant="ghost"
-      className="ios:size-9 web:mx-4 rounded-full">
+      className="ios:size-9 web:mx-4 rounded-full"
+    >
       <Icon icon={THEME_ICONS[theme ?? 'light']} className="size-5" />
     </Button>
   )

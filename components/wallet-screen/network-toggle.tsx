@@ -18,13 +18,15 @@ export function NetworkToggle() {
           <Pressable
             key={value}
             onPress={() => !active && toggleNetwork()}
-            className={['rounded-full px-3 py-1', active ? 'bg-primary' : ''].join(' ')}>
+            className={['rounded-full px-3 py-1', active ? 'bg-primary' : ''].join(' ')}
+          >
             <Text
               variant="small"
               className={[
                 'text-xs',
                 active ? 'text-primary-foreground font-semibold' : 'text-muted-foreground',
-              ].join(' ')}>
+              ].join(' ')}
+            >
               {label}
             </Text>
           </Pressable>

@@ -25,7 +25,8 @@ function Label({
       onLongPress={onLongPress}
       onPressIn={onPressIn}
       onPressOut={onPressOut}
-      disabled={disabled}>
+      disabled={disabled}
+    >
       <LabelPrimitive.Text
         className={cn(
           'text-foreground text-sm font-medium',

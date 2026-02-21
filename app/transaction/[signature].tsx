@@ -157,7 +157,8 @@ function StatusHero({
             className={[
               'h-14 w-14 items-center justify-center rounded-full',
               success ? 'bg-green-500/10' : 'bg-destructive/10',
-            ].join(' ')}>
+            ].join(' ')}
+          >
             {success ? (
               <Icon icon={CheckmarkCircle01Icon} className="size-7 text-green-500" />
             ) : (
@@ -220,7 +221,8 @@ function TokenTransferRow({ mint, delta, symbol, logoURI }: TokenTransfer) {
         className={[
           'text-sm font-semibold tabular-nums',
           isPositive ? 'text-green-500' : 'text-destructive',
-        ].join(' ')}>
+        ].join(' ')}
+      >
         {sign}
         {Math.abs(delta).toLocaleString(undefined, { maximumFractionDigits: 6 })}
       </Text>
@@ -286,7 +288,16 @@ export default function TransactionDetailScreen() {
         }))
 
         if (!cancelled) {
-          setDetail({ success, fee, slot, blockTime, solChange, tokenTransfers, accounts, signature })
+          setDetail({
+            success,
+            fee,
+            slot,
+            blockTime,
+            solChange,
+            tokenTransfers,
+            accounts,
+            signature,
+          })
 
           // Resolve token symbols + logos from cache/Jupiter
           if (tokenTransfers.length > 0) {
@@ -371,11 +382,7 @@ export default function TransactionDetailScreen() {
         ) : detail ? (
           <>
             {/* Animated status hero (includes type badge + timestamp) */}
-            <StatusHero
-              success={detail.success}
-              blockTime={detail.blockTime}
-              txType={txType}
-            />
+            <StatusHero success={detail.success} blockTime={detail.blockTime} txType={txType} />
 
             {/* Summary */}
             <AnimatedCard delay={60}>
@@ -393,7 +400,8 @@ export default function TransactionDetailScreen() {
                         className={[
                           'text-lg font-bold tabular-nums',
                           detail.solChange >= 0 ? 'text-green-500' : 'text-destructive',
-                        ].join(' ')}>
+                        ].join(' ')}
+                      >
                         {detail.solChange >= 0 ? '+' : ''}
                         {detail.solChange.toFixed(6)} SOL
                       </Text>
@@ -443,7 +451,8 @@ export default function TransactionDetailScreen() {
                       <View className="flex-row items-start gap-3">
                         <Text
                           className="text-foreground flex-1 font-mono text-xs leading-5"
-                          numberOfLines={3}>
+                          numberOfLines={3}
+                        >
                           {signature}
                         </Text>
                         <View className="bg-muted mt-0.5 flex-row items-center gap-1.5 rounded-lg px-2.5 py-1.5">
@@ -456,7 +465,8 @@ export default function TransactionDetailScreen() {
                             variant="small"
                             className={
                               copiedSig ? 'text-primary font-semibold' : 'text-muted-foreground'
-                            }>
+                            }
+                          >
                             {copiedSig ? 'Copied!' : 'Copy'}
                           </Text>
                         </View>
@@ -531,7 +541,8 @@ export default function TransactionDetailScreen() {
                   {hiddenCount > 0 && (
                     <Pressable
                       onPress={() => setShowAllAccounts((p) => !p)}
-                      className="active:opacity-60">
+                      className="active:opacity-60"
+                    >
                       <Text className="text-primary text-sm">
                         {showAllAccounts ? 'Show less ↑' : `+ ${hiddenCount} more ↓`}
                       </Text>
@@ -546,7 +557,8 @@ export default function TransactionDetailScreen() {
               <Card className="mb-8 gap-0 overflow-hidden p-0">
                 <Pressable
                   onPress={() => Linking.openURL(`https://solscan.io/tx/${signature}`)}
-                  className="active:opacity-60">
+                  className="active:opacity-60"
+                >
                   <View className="flex-row items-center justify-between px-5 py-4">
                     <View className="flex-row items-center gap-3">
                       <View className="bg-primary/10 h-8 w-8 items-center justify-center rounded-full">
@@ -561,10 +573,9 @@ export default function TransactionDetailScreen() {
                 </Pressable>
                 <Separator className="mx-5" />
                 <Pressable
-                  onPress={() =>
-                    Linking.openURL(`https://explorer.solana.com/tx/${signature}`)
-                  }
-                  className="active:opacity-60">
+                  onPress={() => Linking.openURL(`https://explorer.solana.com/tx/${signature}`)}
+                  className="active:opacity-60"
+                >
                   <View className="flex-row items-center justify-between px-5 py-4">
                     <View className="flex-row items-center gap-3">
                       <View className="bg-muted h-8 w-8 items-center justify-center rounded-full">
