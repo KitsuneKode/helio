@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { Pressable, ScrollView, View } from 'react-native'
+import { Image, Pressable, ScrollView, View } from 'react-native'
 import * as Clipboard from 'expo-clipboard'
 import * as Haptics from 'expo-haptics'
 import * as Linking from 'expo-linking'
@@ -9,6 +9,7 @@ import {
   CheckmarkCircle01Icon,
   CancelCircleIcon,
   Copy01Icon,
+  Coins01Icon,
 } from '@hugeicons/core-free-icons'
 import Animated, {
   useSharedValue,
@@ -24,6 +25,7 @@ import { Icon } from '@/components/ui/icon'
 import { Text } from '@/components/ui/text'
 import { Skeleton } from '@/components/ui/skeleton'
 import { Separator } from '@/components/ui/separator'
+import { ThemeToggle } from '@/components/theme-toggle-button'
 import { short } from '@/utils/format-text'
 import { useNetwork } from '@/context/network-context'
 import { getTransactionDetail } from '@/lib/solana'
@@ -38,6 +40,7 @@ type TokenTransfer = {
   mint: string
   delta: number
   symbol?: string
+  logoURI?: string
 }
 
 type TxDetail = {
@@ -51,15 +54,22 @@ type TxDetail = {
   signature: string
 }
 
-function AnimatedCard({
-  delay,
-  children,
-}: {
-  delay: number
-  children: React.ReactNode
-}) {
+// ─── Tx type detection ─────────────────────────────────────────────────────
+
+function detectTxType(tokenTransfers: TokenTransfer[], solChange: number): string {
+  const hasIn = tokenTransfers.some((t) => t.delta > 0)
+  const hasOut = tokenTransfers.some((t) => t.delta < 0)
+  if (hasIn && hasOut) return 'Swap'
+  if (tokenTransfers.length > 0) return 'Token Transfer'
+  if (Math.abs(solChange) > 0.000001) return 'SOL Transfer'
+  return 'Transaction'
+}
+
+// ─── Sub-components ────────────────────────────────────────────────────────
+
+function AnimatedCard({ delay, children }: { delay: number; children: React.ReactNode }) {
   const opacity = useSharedValue(0)
-  const translateY = useSharedValue(16)
+  const translateY = useSharedValue(12)
 
   useEffect(() => {
     opacity.value = withDelay(delay, withTiming(1, { duration: 280 }))
@@ -74,7 +84,23 @@ function AnimatedCard({
   return <Animated.View style={style}>{children}</Animated.View>
 }
 
-function StatusHero({ success }: { success: boolean }) {
+function SectionLabel({ label }: { label: string }) {
+  return (
+    <Text className="text-muted-foreground mb-3 text-xs font-semibold tracking-widest uppercase">
+      {label}
+    </Text>
+  )
+}
+
+function StatusHero({
+  success,
+  blockTime,
+  txType,
+}: {
+  success: boolean
+  blockTime: number | null
+  txType: string
+}) {
   const scale = useSharedValue(0.5)
   const opacity = useSharedValue(0)
   const pulseScale = useSharedValue(1)
@@ -135,29 +161,65 @@ function StatusHero({ success }: { success: boolean }) {
       <Text className="text-foreground text-xl font-semibold">
         {success ? 'Transaction Confirmed' : 'Transaction Failed'}
       </Text>
-    </View>
-  )
-}
 
-function TokenTransferRow({ mint, delta, symbol }: TokenTransfer) {
-  const sign = delta >= 0 ? '+' : ''
-  const color = delta >= 0 ? 'text-green-500' : 'text-destructive'
-  const label = symbol || short(mint, 6)
+      {/* Transaction type badge */}
+      <View className="bg-muted rounded-full px-4 py-1.5">
+        <Text className="text-muted-foreground text-xs font-semibold uppercase tracking-wider">
+          {txType}
+        </Text>
+      </View>
 
-  return (
-    <View className="flex-row items-center justify-between">
-      <Text className={`${color} text-sm font-semibold`}>
-        {sign}
-        {delta.toLocaleString(undefined, { maximumFractionDigits: 6 })} {label}
-      </Text>
-      {!symbol && (
-        <Text variant="muted" className="font-mono text-xs">
-          {short(mint, 4)}
+      {/* Timestamp in hero */}
+      {blockTime && (
+        <Text variant="muted" className="text-sm">
+          {format(new Date(blockTime * 1000), 'EEE, MMM d · h:mm a')}
         </Text>
       )}
     </View>
   )
 }
+
+function TokenTransferRow({ mint, delta, symbol, logoURI }: TokenTransfer) {
+  const [imgError, setImgError] = useState(false)
+  const sign = delta >= 0 ? '+' : ''
+  const isPositive = delta >= 0
+  const label = symbol || short(mint, 6)
+  const showLogo = !!(logoURI && !imgError)
+
+  return (
+    <View className="flex-row items-center gap-3">
+      <View className="bg-muted h-9 w-9 items-center justify-center overflow-hidden rounded-full">
+        {showLogo ? (
+          <Image
+            source={{ uri: logoURI }}
+            style={{ width: 36, height: 36 }}
+            onError={() => setImgError(true)}
+          />
+        ) : (
+          <Icon icon={Coins01Icon} className="text-muted-foreground size-4" />
+        )}
+      </View>
+      <View className="flex-1">
+        <Text className="text-foreground text-sm font-medium">{label}</Text>
+        {!symbol && (
+          <Text variant="muted" className="font-mono text-xs">
+            {short(mint, 4)}
+          </Text>
+        )}
+      </View>
+      <Text
+        className={[
+          'text-sm font-semibold tabular-nums',
+          isPositive ? 'text-green-500' : 'text-destructive',
+        ].join(' ')}>
+        {sign}
+        {Math.abs(delta).toLocaleString(undefined, { maximumFractionDigits: 6 })}
+      </Text>
+    </View>
+  )
+}
+
+// ─── Screen ────────────────────────────────────────────────────────────────
 
 export default function TransactionDetailScreen() {
   const { signature } = useLocalSearchParams<{ signature: string }>()
@@ -170,6 +232,7 @@ export default function TransactionDetailScreen() {
 
   useEffect(() => {
     let cancelled = false
+
     const load = async () => {
       try {
         const tx = await getTransactionDetail(rpc, signature)
@@ -196,14 +259,12 @@ export default function TransactionDetailScreen() {
 
         const tokenMap: Record<string, { pre: number; post: number }> = {}
         for (const t of preToken) {
-          const mint = t.mint
-          if (!tokenMap[mint]) tokenMap[mint] = { pre: 0, post: 0 }
-          tokenMap[mint].pre += parseFloat(t.uiTokenAmount?.uiAmountString ?? '0')
+          if (!tokenMap[t.mint]) tokenMap[t.mint] = { pre: 0, post: 0 }
+          tokenMap[t.mint].pre += parseFloat(t.uiTokenAmount?.uiAmountString ?? '0')
         }
         for (const t of postToken) {
-          const mint = t.mint
-          if (!tokenMap[mint]) tokenMap[mint] = { pre: 0, post: 0 }
-          tokenMap[mint].post += parseFloat(t.uiTokenAmount?.uiAmountString ?? '0')
+          if (!tokenMap[t.mint]) tokenMap[t.mint] = { pre: 0, post: 0 }
+          tokenMap[t.mint].post += parseFloat(t.uiTokenAmount?.uiAmountString ?? '0')
         }
         const tokenTransfers: TokenTransfer[] = Object.entries(tokenMap)
           .map(([mint, { pre, post }]) => ({ mint, delta: post - pre }))
@@ -218,7 +279,7 @@ export default function TransactionDetailScreen() {
         if (!cancelled) {
           setDetail({ success, fee, slot, blockTime, solChange, tokenTransfers, accounts, signature })
 
-          // Resolve token symbols from cache
+          // Resolve token symbols + logos from cache/Jupiter
           if (tokenTransfers.length > 0) {
             const mints = tokenTransfers.map((t) => t.mint)
             getMetaDataFromCacheOrFetch(mints).then((metaMap) => {
@@ -230,6 +291,7 @@ export default function TransactionDetailScreen() {
                   tokenTransfers: prev.tokenTransfers.map((t) => ({
                     ...t,
                     symbol: metaMap.get(t.mint)?.symbol ?? t.symbol,
+                    logoURI: metaMap.get(t.mint)?.logoURI ?? t.logoURI,
                   })),
                 }
               })
@@ -242,6 +304,7 @@ export default function TransactionDetailScreen() {
         if (!cancelled) setLoading(false)
       }
     }
+
     load()
     return () => {
       cancelled = true
@@ -262,69 +325,64 @@ export default function TransactionDetailScreen() {
     : []
 
   const hiddenCount = detail ? Math.max(0, detail.accounts.length - 3) : 0
+  const txType = detail ? detectTxType(detail.tokenTransfers, detail.solChange) : 'Transaction'
 
   return (
     <SafeAreaViewUniwind className="bg-background flex-1" edges={['top', 'bottom']}>
       {/* Header */}
-      <View className="flex-row items-center px-4 py-3">
+      <View className="flex-row items-center justify-between px-4 py-3">
         <Pressable onPress={() => router.back()} className="p-1 active:opacity-60">
           <Icon icon={ArrowLeft01Icon} className="text-foreground size-6" />
         </Pressable>
-        <Text className="text-foreground ml-3 text-lg font-semibold">Transaction Details</Text>
+        <Text className="text-foreground text-base font-semibold">Transaction</Text>
+        <ThemeToggle />
       </View>
 
       <ScrollView className="flex-1 px-5" showsVerticalScrollIndicator={false}>
         {loading ? (
+          /* Loading skeleton */
           <View className="gap-4 pt-4">
             <View className="items-center gap-3 py-6">
               <Skeleton className="h-14 w-14 rounded-full" />
               <Skeleton className="h-6 w-48 rounded-md" />
+              <Skeleton className="h-6 w-24 rounded-full" />
               <Skeleton className="h-4 w-36 rounded-md" />
             </View>
-            <Skeleton className="h-28 rounded-xl" />
-            <Skeleton className="h-36 rounded-xl" />
-            <Skeleton className="h-32 rounded-xl" />
+            <Skeleton className="h-24 rounded-2xl" />
+            <Skeleton className="h-36 rounded-2xl" />
+            <Skeleton className="h-40 rounded-2xl" />
+            <Skeleton className="h-32 rounded-2xl" />
           </View>
         ) : error ? (
-          <View className="border-border mt-8 items-center gap-2 rounded-xl border border-dashed px-6 py-10">
-            <Text className="text-muted-foreground text-center">{error}</Text>
+          <View className="border-border mt-8 items-center gap-2 rounded-2xl border border-dashed px-6 py-10">
+            <Text variant="muted" className="text-center">
+              {error}
+            </Text>
           </View>
         ) : detail ? (
           <>
-            {/* Animated status hero */}
-            <StatusHero success={detail.success} />
+            {/* Animated status hero (includes type badge + timestamp) */}
+            <StatusHero
+              success={detail.success}
+              blockTime={detail.blockTime}
+              txType={txType}
+            />
 
-            {/* Timestamp row */}
-            {detail.blockTime && (
-              <AnimatedCard delay={0}>
-                <View className="mb-4 items-center gap-1">
-                  <Text className="text-foreground text-sm font-medium">
-                    {format(new Date(detail.blockTime * 1000), 'EEE MMM d, yyyy · h:mm a')}
-                  </Text>
-                  <Text variant="muted" className="text-xs">
-                    {formatDate(new Date(detail.blockTime * 1000))} · Block #{detail.slot.toLocaleString()}
-                  </Text>
+            {/* Summary */}
+            <AnimatedCard delay={60}>
+              <Card className="mb-4 overflow-hidden p-0">
+                <View className="px-5 pt-4 pb-1">
+                  <SectionLabel label="Summary" />
                 </View>
-              </AnimatedCard>
-            )}
-
-            {/* Value Moved */}
-            <AnimatedCard delay={80}>
-              <Card className="mb-4 gap-0 overflow-hidden p-0">
-                <View className="bg-primary/10 px-5 py-3">
-                  <Text variant="muted" className="text-xs tracking-wider uppercase">
-                    Value Moved
-                  </Text>
-                </View>
-                <CardContent className="gap-3 px-5 py-4">
-                  <View className="flex-row justify-between">
+                <CardContent className="px-5 pb-5 pt-0">
+                  <View className="flex-row">
                     <View className="flex-1">
-                      <Text variant="muted" className="mb-1 text-xs tracking-wider uppercase">
+                      <Text variant="muted" className="mb-1 text-xs uppercase tracking-wider">
                         SOL Change
                       </Text>
                       <Text
                         className={[
-                          'text-lg font-bold',
+                          'text-lg font-bold tabular-nums',
                           detail.solChange >= 0 ? 'text-green-500' : 'text-destructive',
                         ].join(' ')}>
                         {detail.solChange >= 0 ? '+' : ''}
@@ -332,41 +390,44 @@ export default function TransactionDetailScreen() {
                       </Text>
                     </View>
                     <View className="flex-1 items-end">
-                      <Text variant="muted" className="mb-1 text-xs tracking-wider uppercase">
-                        Fee
+                      <Text variant="muted" className="mb-1 text-xs uppercase tracking-wider">
+                        Network Fee
                       </Text>
-                      <Text className="text-muted-foreground text-sm font-semibold">
+                      <Text className="text-muted-foreground text-sm font-semibold tabular-nums">
                         {detail.fee.toFixed(6)} SOL
                       </Text>
                     </View>
                   </View>
-
-                  {detail.tokenTransfers.length > 0 && (
-                    <View className="border-border gap-2 border-t pt-3">
-                      <Text variant="muted" className="mb-1 text-xs tracking-wider uppercase">
-                        Token Transfers
-                      </Text>
-                      {detail.tokenTransfers.map((t) => (
-                        <TokenTransferRow key={t.mint} {...t} />
-                      ))}
-                    </View>
-                  )}
                 </CardContent>
               </Card>
             </AnimatedCard>
 
-            {/* Details */}
-            <AnimatedCard delay={160}>
+            {/* Token Transfers — only shown if any */}
+            {detail.tokenTransfers.length > 0 && (
+              <AnimatedCard delay={120}>
+                <Card className="mb-4 overflow-hidden p-0">
+                  <View className="px-5 pt-4 pb-1">
+                    <SectionLabel label={`Token Transfers (${detail.tokenTransfers.length})`} />
+                  </View>
+                  <CardContent className="gap-4 px-5 pb-5 pt-0">
+                    {detail.tokenTransfers.map((t) => (
+                      <TokenTransferRow key={t.mint} {...t} />
+                    ))}
+                  </CardContent>
+                </Card>
+              </AnimatedCard>
+            )}
+
+            {/* Transaction Details */}
+            <AnimatedCard delay={180}>
               <Card className="mb-4 gap-0 overflow-hidden p-0">
-                <View className="bg-primary/10 px-5 py-3">
-                  <Text variant="muted" className="text-xs tracking-wider uppercase">
-                    Details
-                  </Text>
+                <View className="px-5 pt-4 pb-1">
+                  <SectionLabel label="Transaction Details" />
                 </View>
                 <CardContent className="gap-0 px-0 py-0">
                   {/* Signature */}
                   <View className="px-5 py-4">
-                    <Text variant="muted" className="mb-2 text-xs tracking-wider uppercase">
+                    <Text variant="muted" className="mb-2 text-xs uppercase tracking-wider">
                       Signature
                     </Text>
                     <Pressable onPress={handleCopySig} className="active:opacity-60">
@@ -377,7 +438,11 @@ export default function TransactionDetailScreen() {
                           {signature}
                         </Text>
                         <View className="bg-muted mt-0.5 flex-row items-center gap-1.5 rounded-lg px-2.5 py-1.5">
-                          <Icon icon={Copy01Icon} className="text-muted-foreground size-3.5" />
+                          {copiedSig ? (
+                            <Icon icon={CheckmarkCircle01Icon} className="text-primary size-3.5" />
+                          ) : (
+                            <Icon icon={Copy01Icon} className="text-muted-foreground size-3.5" />
+                          )}
                           <Text
                             variant="small"
                             className={
@@ -392,10 +457,22 @@ export default function TransactionDetailScreen() {
 
                   <Separator className="mx-5" />
 
+                  {/* Block / Slot */}
+                  <View className="px-5 py-4">
+                    <Text variant="muted" className="mb-1 text-xs uppercase tracking-wider">
+                      Block / Slot
+                    </Text>
+                    <Text className="text-foreground text-sm font-semibold tabular-nums">
+                      {detail.slot.toLocaleString()}
+                    </Text>
+                  </View>
+
+                  {/* Timestamp */}
                   {detail.blockTime && (
                     <>
+                      <Separator className="mx-5" />
                       <View className="px-5 py-4">
-                        <Text variant="muted" className="mb-1 text-xs tracking-wider uppercase">
+                        <Text variant="muted" className="mb-1 text-xs uppercase tracking-wider">
                           Timestamp
                         </Text>
                         <Text className="text-foreground text-sm">
@@ -405,18 +482,8 @@ export default function TransactionDetailScreen() {
                           {formatDate(new Date(detail.blockTime * 1000))}
                         </Text>
                       </View>
-                      <Separator className="mx-5" />
                     </>
                   )}
-
-                  <View className="px-5 py-4">
-                    <Text variant="muted" className="mb-1 text-xs tracking-wider uppercase">
-                      Block / Slot
-                    </Text>
-                    <Text className="text-foreground text-sm tabular-nums">
-                      {detail.slot.toLocaleString()}
-                    </Text>
-                  </View>
                 </CardContent>
               </Card>
             </AnimatedCard>
@@ -424,12 +491,10 @@ export default function TransactionDetailScreen() {
             {/* Accounts */}
             <AnimatedCard delay={240}>
               <Card className="mb-4 gap-0 overflow-hidden p-0">
-                <View className="bg-primary/10 px-5 py-3">
-                  <Text variant="muted" className="text-xs tracking-wider uppercase">
-                    Accounts ({detail.accounts.length})
-                  </Text>
+                <View className="px-5 pt-4 pb-1">
+                  <SectionLabel label={`Accounts (${detail.accounts.length})`} />
                 </View>
-                <CardContent className="gap-3 px-5 py-4">
+                <CardContent className="gap-3 px-5 pb-5 pt-0">
                   {visibleAccounts.map((acc, idx) => (
                     <View key={acc.address} className="flex-row flex-wrap items-center gap-2">
                       <Text className="text-foreground font-mono text-sm">
@@ -467,8 +532,8 @@ export default function TransactionDetailScreen() {
               </Card>
             </AnimatedCard>
 
-            {/* Explorer link */}
-            <AnimatedCard delay={320}>
+            {/* Explorer Links */}
+            <AnimatedCard delay={300}>
               <Card className="mb-8 gap-0 overflow-hidden p-0">
                 <Pressable
                   onPress={() => Linking.openURL(`https://solscan.io/tx/${signature}`)}
@@ -479,6 +544,24 @@ export default function TransactionDetailScreen() {
                         <Text className="text-primary text-xs font-bold">S</Text>
                       </View>
                       <Text className="text-foreground font-medium">View on Solscan</Text>
+                    </View>
+                    <Text variant="muted" className="text-base">
+                      ↗
+                    </Text>
+                  </View>
+                </Pressable>
+                <Separator className="mx-5" />
+                <Pressable
+                  onPress={() =>
+                    Linking.openURL(`https://explorer.solana.com/tx/${signature}`)
+                  }
+                  className="active:opacity-60">
+                  <View className="flex-row items-center justify-between px-5 py-4">
+                    <View className="flex-row items-center gap-3">
+                      <View className="bg-muted h-8 w-8 items-center justify-center rounded-full">
+                        <Text className="text-muted-foreground text-xs font-bold">◎</Text>
+                      </View>
+                      <Text className="text-foreground font-medium">Solana Explorer</Text>
                     </View>
                     <Text variant="muted" className="text-base">
                       ↗
