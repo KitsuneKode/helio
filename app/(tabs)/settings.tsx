@@ -13,7 +13,8 @@ import { ThemeToggle } from '@/components/theme-toggle-button'
 import { NetworkToggle } from '@/components/network-toggle'
 import { useNetwork } from '@/context/network-context'
 import { SettingsRow } from '@/components/settings-screen/settings-row'
-import { useResolveClassNames } from 'uniwind'
+import { WalletConnectButton } from '@/components/wallet-connect-button'
+import { Uniwind, useResolveClassNames, useUniwind } from 'uniwind'
 
 export default function SettingsScreen() {
   const { customRpcUrl, setCustomRpcUrl } = useNetwork()
@@ -21,6 +22,13 @@ export default function SettingsScreen() {
 
   const handleRpcBlur = () => {
     setCustomRpcUrl(rpcInput)
+  }
+
+  const { theme } = useUniwind()
+
+  function toggleTheme() {
+    const newTheme = theme === 'dark' ? 'light' : 'dark'
+    Uniwind.setTheme(newTheme)
   }
 
   const { color } = useResolveClassNames('text-muted-foreground/40')
@@ -62,7 +70,7 @@ export default function SettingsScreen() {
         {/* Appearance */}
         <SectionLabel className="ml-4" label="Appearance" />
         <Card className="overflow-hidden p-0 mb-4">
-          <SettingsRow label="Theme" right={<ThemeToggle />} />
+          <SettingsRow label="Theme" onPress={toggleTheme} right={<ThemeToggle />} />
         </Card>
 
         {/* Quick Links */}
@@ -83,14 +91,9 @@ export default function SettingsScreen() {
 
         {/* Wallet */}
         <SectionLabel label="Wallet" className="ml-4" />
-        <Card className="overflow-hidden p-0 py-2">
-          <SettingsRow
-            label="Connect Wallet"
-            onPress={() => {}}
-            disabled
-            right={<Icon icon={ArrowRight01Icon} className="text-muted-foreground size-5 " />}
-          />
-        </Card>
+        <View>
+          <WalletConnectButton />
+        </View>
 
         {/* Footer */}
         <View className="mt-8 items-center">

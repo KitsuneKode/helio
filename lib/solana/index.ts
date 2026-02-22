@@ -1,4 +1,4 @@
-import { LAMPORTS_PER_SOL, TXN_PAGE } from '@/constants/solana'
+import { TXN_PAGE } from '@/constants/solana'
 import {
   FetchMetadataFromJupiterResult,
   GetAllTokenMetadataFromJupiterResponse,
@@ -10,6 +10,7 @@ import {
 import { TOKEN_PROGRAM_ADDRESS } from '@solana-program/token'
 import { address, type Address, type Signature } from '@solana/kit'
 import axios, { isAxiosError } from 'axios'
+import { LAMPORTS_PER_SOL } from '@solana/web3.js'
 
 type ValidatePublicKeyResult =
   | {
@@ -30,7 +31,7 @@ export const isValidPublicKey = (pubKey: string): ValidatePublicKeyResult => {
 export const getBalance = async (rpc: SolanaRpc, pubKey: Address): Promise<GetBalanceResult> => {
   const balance = await rpc.getBalance(pubKey).send()
   return {
-    balance: Number(balance.value) / Number(LAMPORTS_PER_SOL),
+    balance: Number(balance.value) / LAMPORTS_PER_SOL,
     address: pubKey.toString(),
   }
 }

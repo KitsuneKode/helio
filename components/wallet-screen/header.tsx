@@ -2,6 +2,7 @@ import { View } from 'react-native'
 import { Text } from '../ui/text'
 import { NetworkToggle } from '@/components/network-toggle'
 import { ThemeToggle } from '@/components/theme-toggle-button'
+import { WalletConnectButton } from '@/components/wallet-connect-button'
 
 export function Header() {
   return (
@@ -11,6 +12,7 @@ export function Header() {
         <Text className="text-muted-foreground text-xs">Explore any Solana wallet</Text>
       </View>
       <View className="flex-row items-center gap-1">
+        <WalletConnectButton compact />
         <NetworkToggle />
         <ThemeToggle />
       </View>
