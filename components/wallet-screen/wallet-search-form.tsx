@@ -31,8 +31,8 @@ export function WalletSearchForm({
         </LabelUniwind>
         <Input
           id="input"
-          className="border-input ring-muted h-14 ring-1"
-          placeholder=" 83astBRguLMdt2h...."
+          className="px-2 border-input ring-muted h-14 ring-1"
+          placeholder="83astBRguLMdt2h...."
           placeholderTextColor="#B4B4BC"
           value={value}
           onChangeText={onChangeValue}

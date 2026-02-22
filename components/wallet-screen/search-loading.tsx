@@ -1,4 +1,4 @@
-import { View } from 'react-native'
+import { Image, View } from 'react-native'
 import { Skeleton } from '@/components/ui/skeleton'
 import { Text } from '@/components/ui/text'
 
@@ -36,8 +36,15 @@ export const SearchLoading = () => {
       <View className="border-border bg-card overflow-hidden rounded-xl border">
         {/* Header strip */}
         <View className="bg-primary/10 flex-row items-center gap-3 px-5 py-4">
-          <Skeleton className="h-5 w-5 rounded-full" />
-          <Skeleton className="h-2.5 w-24 rounded-full" />
+          <Image
+            source={{
+              uri: 'https://raw.githubusercontent.com/solana-labs/token-list/main/assets/mainnet/So11111111111111111111111111111111111111112/logo.png',
+            }}
+            className="size-6 rounded-2xl"
+          />
+          <Text variant="small" className="text-muted-foreground flex-1 tracking-widest uppercase">
+            SOL Balance
+          </Text>
         </View>
 
         {/* Balance amount */}

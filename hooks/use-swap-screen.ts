@@ -144,15 +144,7 @@ export function useSwapScreen() {
   const isReady = !!quote && !quoteLoading && parsedPay > 0
   const canSwap = isReady
 
-  const ctaLabel = quoteLoading
-    ? 'Getting quote…'
-    : canSwap
-      ? `Swap ${fromToken.symbol} → ${toToken.symbol}`
-      : quoteError
-        ? 'No route available'
-        : parsedPay > 0
-          ? 'Getting quote…'
-          : 'Enter an amount'
+  const ctaLabel = `Swap ${fromToken.symbol} → ${toToken.symbol}`
 
   const handleCtaPress = () => {
     if (!payAmount || parsedPay <= 0) {

@@ -1,10 +1,6 @@
 import { useEffect } from 'react'
-import Animated, {
-  useSharedValue,
-  useAnimatedStyle,
-  withTiming,
-  withDelay,
-} from 'react-native-reanimated'
+import { AnimatedViewUniwind } from '@/components/styled-uniwind-components'
+import { useSharedValue, useAnimatedStyle, withTiming, withDelay } from 'react-native-reanimated'
 
 type AnimatedCardProps = {
   delay: number
@@ -25,5 +21,5 @@ export function AnimatedCard({ delay, children }: AnimatedCardProps) {
     transform: [{ translateY: translateY.value }],
   }))
 
-  return <Animated.View style={style}>{children}</Animated.View>
+  return <AnimatedViewUniwind style={style}>{children}</AnimatedViewUniwind>
 }

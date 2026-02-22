@@ -1,7 +1,8 @@
 import { useEffect } from 'react'
 import { Image, ScrollView, View } from 'react-native'
 import { Coins01Icon } from '@hugeicons/core-free-icons'
-import Animated, { useSharedValue, useAnimatedStyle, withTiming } from 'react-native-reanimated'
+import { useSharedValue, useAnimatedStyle, withTiming } from 'react-native-reanimated'
+import { AnimatedViewUniwind } from '@/components/styled-uniwind-components'
 import { Icon } from '@/components/ui/icon'
 import { Text } from '@/components/ui/text'
 import { Skeleton } from '@/components/ui/skeleton'
@@ -82,7 +83,7 @@ export function TokenHero({
   })()
 
   return (
-    <Animated.View style={heroStyle}>
+    <AnimatedViewUniwind style={heroStyle}>
       <View className="items-center gap-3 px-5 pb-4 pt-6">
         {/* Logo */}
         <View className="bg-muted h-24 w-24 items-center justify-center overflow-hidden rounded-full">
@@ -206,6 +207,6 @@ export function TokenHero({
           <PriceChangeBadge period="24h" change={detail?.stats24h?.priceChange ?? null} />
         </View>
       )}
-    </Animated.View>
+    </AnimatedViewUniwind>
   )
 }

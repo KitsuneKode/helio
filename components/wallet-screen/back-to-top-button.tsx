@@ -1,7 +1,8 @@
 import { Pressable } from 'react-native'
 import type { ScrollView } from 'react-native'
 import type { RefObject } from 'react'
-import Animated, {
+import { AnimatedViewUniwind } from '@/components/styled-uniwind-components'
+import {
   useAnimatedStyle,
   useDerivedValue,
   withTiming,
@@ -28,7 +29,7 @@ export const BackToTopButton = ({ scrollY, scrollRef }: Props) => {
   }
 
   return (
-    <Animated.View
+    <AnimatedViewUniwind
       style={[
         animatedStyle,
         {
@@ -52,6 +53,6 @@ export const BackToTopButton = ({ scrollY, scrollRef }: Props) => {
       >
         <Icon icon={ArrowUp01Icon} size={24} className=" text-primary-foreground" />
       </Pressable>
-    </Animated.View>
+    </AnimatedViewUniwind>
   )
 }

@@ -1,11 +1,7 @@
 import { cn } from '@/lib/utils'
 import { View } from 'react-native'
-import Animated, {
-  useAnimatedStyle,
-  useSharedValue,
-  withRepeat,
-  withTiming,
-} from 'react-native-reanimated'
+import { AnimatedViewUniwind } from '@/components/styled-uniwind-components'
+import { useAnimatedStyle, useSharedValue, withRepeat, withTiming } from 'react-native-reanimated'
 import * as React from 'react'
 
 const duration = 1000
@@ -27,7 +23,7 @@ function Skeleton({
     [sv],
   )
   return (
-    <Animated.View
+    <AnimatedViewUniwind
       style={style}
       className={cn('bg-muted dark:bg-border rounded-md', className)}
       {...props}

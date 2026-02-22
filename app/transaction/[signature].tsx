@@ -11,7 +11,8 @@ import {
   Copy01Icon,
   Coins01Icon,
 } from '@hugeicons/core-free-icons'
-import Animated, {
+import { AnimatedViewUniwind, SafeAreaViewUniwind } from '@/components/styled-uniwind-components'
+import {
   useSharedValue,
   useAnimatedStyle,
   withTiming,
@@ -31,7 +32,6 @@ import { useNetwork } from '@/context/network-context'
 import { getTransactionDetail } from '@/lib/solana'
 import { format } from 'date-fns'
 import { formatDate } from '@/utils/format-date'
-import { SafeAreaViewUniwind } from '@/components/styled-uniwind-components'
 import { getMetaDataFromCacheOrFetch } from '@/lib/cache/token-metadata'
 
 const LAMPORTS = 1_000_000_000
@@ -81,7 +81,7 @@ function AnimatedCard({ delay, children }: { delay: number; children: React.Reac
     transform: [{ translateY: translateY.value }],
   }))
 
-  return <Animated.View style={style}>{children}</Animated.View>
+  return <AnimatedViewUniwind style={style}>{children}</AnimatedViewUniwind>
 }
 
 function SectionLabel({ label }: { label: string }) {
@@ -139,7 +139,7 @@ function StatusHero({
     <View className="items-center gap-3 py-8">
       <View className="items-center justify-center">
         {success && (
-          <Animated.View
+          <AnimatedViewUniwind
             style={[
               pulseStyle,
               {
@@ -152,7 +152,7 @@ function StatusHero({
             ]}
           />
         )}
-        <Animated.View style={iconStyle}>
+        <AnimatedViewUniwind style={iconStyle}>
           <View
             className={[
               'h-14 w-14 items-center justify-center rounded-full',
@@ -165,7 +165,7 @@ function StatusHero({
               <Icon icon={CancelCircleIcon} className="text-destructive size-7" />
             )}
           </View>
-        </Animated.View>
+        </AnimatedViewUniwind>
       </View>
 
       <Text className="text-foreground text-xl font-semibold">
