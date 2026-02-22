@@ -6,7 +6,7 @@ import { Icon } from '@/components/ui/icon'
 import { Text } from '@/components/ui/text'
 import { Skeleton } from '@/components/ui/skeleton'
 import { formatUsd, formatPrice } from '@/utils/format-number'
-import type { TokenJupiterDetail } from '@/lib/solana/token-details'
+import type { TokenJupiterDetail } from '@/types'
 
 type TokenHeroProps = {
   detail: TokenJupiterDetail | null

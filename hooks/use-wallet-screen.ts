@@ -2,19 +2,19 @@ import { useEffect, useState } from 'react'
 import { Alert, Keyboard } from 'react-native'
 import { router } from 'expo-router'
 import { useNetwork } from '@/context/network-context'
-import type {
+import {
   GetBalanceResult,
   GetTokensResult,
   GetTransactionsResult,
-  TokenBalance,
-} from '@/lib/solana'
+  GetAllTokensBalanceResult,
+} from '@/types'
 import { getAllTokens, getAllTransactions, getBalance, isValidPublicKey } from '@/lib/solana'
 import { getMetaDataFromCacheOrFetch } from '@/lib/cache/token-metadata'
 import { TOKEN_PAGE, TXN_PAGE } from '@/constants/solana'
 
 type WalletData = {
   balance: GetBalanceResult
-  allTokens: TokenBalance[]
+  allTokens: GetAllTokensBalanceResult[]
   visibleTokens: GetTokensResult
   transactions: GetTransactionsResult
   hasMoreTx: boolean

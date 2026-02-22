@@ -2,10 +2,10 @@ import { ActivityIndicator, FlatList, Pressable, View } from 'react-native'
 import { Text } from '@/components/ui/text'
 import { EmptyTokens } from '@/components/wallet-screen/empty-tokens'
 import { TokenListItem } from '@/components/wallet-screen/token-list-item'
-import type { GetTokensResult, TokenBalance } from '@/lib/solana'
+import type { GetTokensResult, GetAllTokensBalanceResult } from '@/types'
 
 type TokenSectionProps = {
-  allTokens: TokenBalance[]
+  allTokens: GetAllTokensBalanceResult[]
   visibleTokens: GetTokensResult
   hasMoreTokens: boolean
   canShowLess: boolean

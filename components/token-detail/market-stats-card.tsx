@@ -6,7 +6,7 @@ import { AnimatedCard } from '@/components/ui/animated-card'
 import { SectionLabel } from '@/components/ui/section-label'
 import { MarketStat } from './market-stat'
 import { formatUsd, formatPrice } from '@/utils/format-number'
-import type { TokenJupiterDetail } from '@/lib/solana/token-details'
+import type { TokenJupiterDetail } from '@/types'
 
 type MarketStatsCardProps = {
   detail: TokenJupiterDetail | null

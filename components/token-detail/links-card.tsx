@@ -5,7 +5,7 @@ import { Text } from '@/components/ui/text'
 import { Separator } from '@/components/ui/separator'
 import { AnimatedCard } from '@/components/ui/animated-card'
 import { SectionLabel } from '@/components/ui/section-label'
-import type { TokenJupiterDetail } from '@/lib/solana/token-details'
+import type { TokenJupiterDetail } from '@/types'
 
 type LinksCardProps = {
   mint: string

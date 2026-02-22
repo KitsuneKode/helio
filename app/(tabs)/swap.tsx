@@ -8,7 +8,7 @@ import { SwapCta } from '@/components/swap-screen/swap-cta'
 import { SwapFlipButton } from '@/components/swap-screen/swap-flip-button'
 import { SwapFooter } from '@/components/swap-screen/swap-footer'
 import { SwapHeader } from '@/components/swap-screen/swap-header'
-import { useSwapScreen } from '@/components/swap-screen/use-swap-screen'
+import { useSwapScreen } from '@/hooks/use-swap-screen'
 
 export default function SwapScreen() {
   const swap = useSwapScreen()

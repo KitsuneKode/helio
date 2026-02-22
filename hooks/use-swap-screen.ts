@@ -3,13 +3,14 @@ import { Alert } from 'react-native'
 import * as Haptics from 'expo-haptics'
 import { Easing, runOnJS, useSharedValue, withTiming } from 'react-native-reanimated'
 import { useUniwind } from 'uniwind'
-import { fetchSwapQuote, type SwapQuote } from '@/lib/solana/swap'
+import { fetchSwapQuote } from '@/lib/solana/swap'
 import {
   getAmountFontSize,
   parsePriceImpact,
   rawToDisplay,
 } from '@/components/swap-screen/swap-formatters'
-import { SOL, type SlippageOpt, USDC } from '@/components/swap-screen/types'
+import { SOL, type SlippageOpt, USDC } from '@/types/swap-screen'
+import { SwapQuote } from '@/types'
 
 export function useSwapScreen() {
   const { theme } = useUniwind()

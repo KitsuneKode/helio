@@ -4,7 +4,7 @@ import { Coins01Icon, ArrowRight01Icon } from '@hugeicons/core-free-icons'
 import { Icon } from '@/components/ui/icon'
 import { Text } from '@/components/ui/text'
 import { short } from '@/utils/format-text'
-import type { GetTokensResult } from '@/lib/solana'
+import type { GetTokensResult } from '@/types'
 
 type Token = GetTokensResult[number]
 

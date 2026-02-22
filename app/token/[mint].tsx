@@ -15,7 +15,8 @@ import { MarketStatsCard } from '@/components/token-detail/market-stats-card'
 import { TokenInfoCard } from '@/components/token-detail/token-info-card'
 import { LinksCard } from '@/components/token-detail/links-card'
 import { short } from '@/utils/format-text'
-import { fetchTokenJupiterDetail, type TokenJupiterDetail } from '@/lib/solana/token-details'
+import { fetchTokenJupiterDetail } from '@/lib/solana/token-details'
+import type { TokenJupiterDetail } from '@/types'
 
 export default function TokenDetailScreen() {
   const { mint, amount, tokenName, symbol, logoURI } = useLocalSearchParams<{

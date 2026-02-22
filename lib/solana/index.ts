@@ -1,41 +1,15 @@
 import { LAMPORTS_PER_SOL, TXN_PAGE } from '@/constants/solana'
-import { TOKEN_PROGRAM_ADDRESS } from '@solana-program/token'
 import {
-  address,
-  type Address,
-  type Signature,
-  type TransactionError,
-  type createSolanaRpc,
-} from '@solana/kit'
+  FetchMetadataFromJupiterResult,
+  GetAllTokenMetadataFromJupiterResponse,
+  GetAllTokensBalanceResult,
+  GetBalanceResult,
+  GetTransactionsResult,
+  SolanaRpc,
+} from '@/types'
+import { TOKEN_PROGRAM_ADDRESS } from '@solana-program/token'
+import { address, type Address, type Signature } from '@solana/kit'
 import axios, { isAxiosError } from 'axios'
-
-export type SolanaRpc = ReturnType<typeof createSolanaRpc>
-
-export interface FetchMetadataFromJupiterResult {
-  id: string
-  name: string
-  symbol: string
-  decimals: number
-  icon: string
-  tokenProgram: string
-  totalSupply: number
-}
-
-export type TokenBalance = { mint: string; amount: number }
-
-export type GetTokensResult = (TokenBalance & {
-  tokenName?: string
-  symbol?: string
-  logoURI?: string
-})[]
-
-export type GetBalanceResult = { balance: number; address: string }
-
-export type GetTransactionsResult = {
-  signature: string
-  blockTime: string | undefined
-  err: TransactionError | null
-}[]
 
 type ValidatePublicKeyResult =
   | {
@@ -61,7 +35,10 @@ export const getBalance = async (rpc: SolanaRpc, pubKey: Address): Promise<GetBa
   }
 }
 
-export const getAllTokens = async (rpc: SolanaRpc, pubKey: Address): Promise<TokenBalance[]> => {
+export const getAllTokens = async (
+  rpc: SolanaRpc,
+  pubKey: Address,
+): Promise<GetAllTokensBalanceResult[]> => {
   try {
     const response = await rpc
       .getTokenAccountsByOwner(
@@ -113,15 +90,6 @@ export const getTransactionDetail = async (rpc: SolanaRpc, signature: string) =>
 
 // Fetches token metadata (name, symbol, logoURI) from Jupiter Token API.
 // Plain HTTP — no crypto dependency. Falls back gracefully for unknown / devnet mints.
-
-export type TokenMetadata = Omit<FetchMetadataFromJupiterResult, 'id' | 'name' | 'icon'> & {
-  tokenName: FetchMetadataFromJupiterResult['name']
-  logoURI: FetchMetadataFromJupiterResult['icon']
-}
-export type GetAllTokenMetadataFromJupiterResponse = Map<
-  FetchMetadataFromJupiterResult['id'],
-  TokenMetadata
->
 
 export const getAllTokenMetadataFromJupiter = async (
   mints: string[],

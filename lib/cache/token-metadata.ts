@@ -1,4 +1,5 @@
-import { getAllTokenMetadataFromJupiter, type TokenMetadata } from '../solana'
+import { TokenMetadata } from '@/types'
+import { getAllTokenMetadataFromJupiter } from '../solana'
 import { storage } from '../storage'
 
 const getFromCache = (mint: string): TokenMetadata | null => {

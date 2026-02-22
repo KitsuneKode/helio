@@ -8,7 +8,7 @@ import { Icon } from '@/components/ui/icon'
 import { Text } from '@/components/ui/text'
 import { short } from '@/utils/format-text'
 import { formatDate } from '@/utils/format-date'
-import type { GetTransactionsResult } from '@/lib/solana'
+import type { GetTransactionsResult } from '@/types'
 
 type Transaction = GetTransactionsResult[number]
 

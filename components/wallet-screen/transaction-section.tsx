@@ -2,7 +2,7 @@ import { ActivityIndicator, FlatList, Pressable, View } from 'react-native'
 import { Text } from '@/components/ui/text'
 import { EmptyTransactions } from '@/components/wallet-screen/empty-transactions'
 import { TransactionListItem } from '@/components/wallet-screen/transaction-list-item'
-import type { GetTransactionsResult } from '@/lib/solana'
+import type { GetTransactionsResult } from '@/types'
 
 type TransactionSectionProps = {
   transactions: GetTransactionsResult
