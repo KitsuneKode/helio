@@ -2,6 +2,7 @@ import { useCallback, useEffect, useMemo, useState } from 'react'
 import { useWatchlistStore } from '@/store/watchlist-store'
 import { getMetaDataFromCacheOrFetch } from '@/lib/cache/token-metadata'
 import { TokenMetadata } from '@/types'
+import { useNetwork } from '@/context/network-context'
 
 const PAGE_SIZE = 10
 
@@ -10,7 +11,7 @@ export type WatchlistToken = { address: string; metadata: TokenMetadata }
 export function useWatchlistScreen() {
   const watchlist = useWatchlistStore((s) => s.watchlist)
   const removeFromWatchlist = useWatchlistStore((s) => s.removeFromWatchlist)
-
+  const { network } = useNetwork()
   const [tokens, setTokens] = useState<WatchlistToken[]>([])
   const [wallets, setWallets] = useState<string[]>([])
   const [loading, setLoading] = useState(false)
@@ -29,7 +30,7 @@ export function useWatchlistScreen() {
     let cancelled = false
     setLoading(true)
 
-    getMetaDataFromCacheOrFetch(watchlist).then((metaMap) => {
+    getMetaDataFromCacheOrFetch({ mints: watchlist, network }).then((metaMap) => {
       if (cancelled) return
 
       const classifiedTokens: WatchlistToken[] = []
@@ -54,12 +55,9 @@ export function useWatchlistScreen() {
     return () => {
       cancelled = true
     }
-  }, [watchlist])
+  }, [watchlist, network])
 
-  const visibleTokens = useMemo(
-    () => tokens.slice(0, tokenPage * PAGE_SIZE),
-    [tokens, tokenPage],
-  )
+  const visibleTokens = useMemo(() => tokens.slice(0, tokenPage * PAGE_SIZE), [tokens, tokenPage])
 
   const visibleWallets = useMemo(
     () => wallets.slice(0, walletPage * PAGE_SIZE),

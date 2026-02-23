@@ -24,7 +24,8 @@ export const TokenListItem = ({ item, onPress }: Props) => {
 
   const displayName = item.tokenName || short(item.mint, 8)
   const displaySymbol = item.symbol || null
-  const showImage = !!(item.logoURI && !imgError)
+  const logoURI = item.logoURI ?? undefined
+  const showImage = !!(logoURI && !imgError)
 
   return (
     <Pressable onPress={() => onPress?.(item)} className="active:opacity-70">
@@ -33,7 +34,7 @@ export const TokenListItem = ({ item, onPress }: Props) => {
         <View className="bg-primary/10 h-11 w-11 shrink-0 items-center justify-center overflow-hidden rounded-full">
           {showImage ? (
             <Image
-              source={{ uri: item.logoURI }}
+              source={{ uri: logoURI }}
               style={{ width: 44, height: 44, borderRadius: 22 }}
               onError={() => setImgError(true)}
             />

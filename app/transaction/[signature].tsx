@@ -35,7 +35,7 @@ function detectTxType(tokenTransfers: TokenTransfer[], solChange: number): strin
 
 export default function TransactionDetailScreen() {
   const { signature } = useLocalSearchParams<{ signature: string }>()
-  const { rpc } = useNetwork()
+  const { rpc, network } = useNetwork()
   const [detail, setDetail] = useState<TxDetail | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
@@ -101,7 +101,7 @@ export default function TransactionDetailScreen() {
           // Resolve token symbols + logos from cache/Jupiter
           if (tokenTransfers.length > 0) {
             const mints = tokenTransfers.map((t) => t.mint)
-            getMetaDataFromCacheOrFetch(mints).then((metaMap) => {
+            getMetaDataFromCacheOrFetch({ mints, network }).then((metaMap) => {
               if (cancelled) return
               setDetail((prev) => {
                 if (!prev) return prev

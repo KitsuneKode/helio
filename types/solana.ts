@@ -15,9 +15,9 @@ export interface FetchMetadataFromJupiterResult {
 export type GetAllTokensBalanceResult = { mint: string; amount: number }
 
 export type GetTokensResult = (GetAllTokensBalanceResult & {
-  tokenName?: string
-  symbol?: string
-  logoURI?: string
+  tokenName?: string | null
+  symbol?: string | null
+  logoURI?: string | null
 })[]
 
 export type GetBalanceResult = { balance: number; address: string }

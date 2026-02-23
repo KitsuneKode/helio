@@ -85,6 +85,7 @@ export function useWalletScreen(initialAddress?: string) {
           fetchTokenJupiterDetail(SOL_MINT, network),
         ])
 
+        console.log('token', tokn)
         const firstPage = tokn.slice(0, TOKEN_PAGE)
 
         setWalletData({

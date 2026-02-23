@@ -18,6 +18,7 @@ import { Separator } from '@/components/ui/separator'
 import { useUserWallet } from '@/context/user-wallet-context'
 import { fetchTokenJupiterDetail } from '@/lib/solana/token-details'
 import { isValidPublicKey } from '@/lib/solana'
+import { useNetwork } from '@/context/network-context'
 import { short } from '@/utils/format-text'
 import { useResolveClassNames } from 'uniwind'
 import { SystemProgram } from '@solana/web3.js'
@@ -33,6 +34,7 @@ function computeFontSize(val: string): number {
 
 export default function SendSolScreen() {
   const { publicKey, connected, sending, sendSOL, getBalance } = useUserWallet()
+  const { network } = useNetwork()
   const { color: placeholderColor } = useResolveClassNames('text-muted-foreground/40')
   const { color: inputTextColor } = useResolveClassNames('text-foreground')
 
@@ -47,7 +49,7 @@ export default function SendSolScreen() {
     if (!connected) return
     let cancelled = false
 
-    Promise.all([getBalance(), fetchTokenJupiterDetail(SOL_MINT)]).then(([bal, detail]) => {
+    Promise.all([getBalance(), fetchTokenJupiterDetail(SOL_MINT, network)]).then(([bal, detail]) => {
       if (cancelled) return
       setBalance(bal)
       setSolPriceUsd(detail.priceUsd)

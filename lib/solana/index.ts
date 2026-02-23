@@ -12,9 +12,8 @@ import { address, type Address, type Signature } from '@solana/kit'
 import axios, { isAxiosError } from 'axios'
 import { LAMPORTS_PER_SOL } from '@solana/web3.js'
 import config from '@/config'
-import { Network } from '@/context/network-context'
-import { fetchAllDigitalAsset } from '@metaplex-foundation/mpl-token-metadata-kit'
 
+const { EXPO_PUBLIC_HELIUS_DEV_NET_RPC_URL } = config
 type ValidatePublicKeyResult =
   | {
       success: true
@@ -137,7 +136,7 @@ export const getAllTokenMetadataFromHelius = async (
 ): Promise<GetAllTokenMetadataResponse | undefined> => {
   try {
     const res = await axios.post(
-      config.EXPO_PUBLIC_DEV_NET_RPC_URL,
+      EXPO_PUBLIC_HELIUS_DEV_NET_RPC_URL,
       {
         jsonrpc: '2.0',
         id: 'helio',
@@ -149,6 +148,7 @@ export const getAllTokenMetadataFromHelius = async (
       },
       { headers: { 'Content-Type': 'application/json' } },
     )
+    console.log('Helius response for token metadata:', res.data)
 
     const assets = res.data?.result
     if (!Array.isArray(assets)) return
@@ -158,8 +158,7 @@ export const getAllTokenMetadataFromHelius = async (
       if (!asset?.id) continue
       const metadata = asset.content?.metadata
       const tokenInfo = asset.token_info
-      const logoURI =
-        asset.content?.links?.image ?? asset.content?.files?.[0]?.cdn_uri ?? null
+      const logoURI = asset.content?.links?.image ?? asset.content?.files?.[0]?.cdn_uri ?? null
 
       map.set(asset.id, {
         tokenName: metadata?.name ?? null,

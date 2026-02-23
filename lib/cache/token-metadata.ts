@@ -39,6 +39,8 @@ export const getMetaDataFromCacheOrFetch = async (config: Config) => {
   const { mints, network } = config
   const { present, missing } = getMetaDataAndMissingKeysFromCache(mints, network)
 
+  console.log(network, present, missing)
+
   if (missing.length !== 0) {
     const metadataFromJupiter =
       network === 'devnet'
