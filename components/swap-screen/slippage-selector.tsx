@@ -1,6 +1,7 @@
 import { Pressable, View } from 'react-native'
 import { Text } from '@/components/ui/text'
-import { SLIPPAGE_OPTS, type SlippageOpt } from '@/types/swap-screen'
+import { type SlippageOpt } from '@/types'
+import { SLIPPAGE_OPTS } from '@/constants/swap'
 
 type SlippageSelectorProps = {
   slippage: SlippageOpt

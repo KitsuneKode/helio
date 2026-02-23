@@ -4,7 +4,7 @@ import { ArrowDown01Icon } from '@hugeicons/core-free-icons'
 import { Icon } from '@/components/ui/icon'
 import { Text } from '@/components/ui/text'
 import { AnimatedViewUniwind } from '@/components/styled-uniwind-components'
-import type { Token } from '@/types/swap-screen'
+import type { Token } from '@/types/swap'
 import {
   useAnimatedStyle,
   useSharedValue,

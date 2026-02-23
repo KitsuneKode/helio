@@ -1,10 +1,4 @@
-export type Token = {
-  mint: string
-  symbol: string
-  name: string
-  logo: string
-  decimals: number
-}
+import { Token } from '@/types'
 
 export const SOL: Token = {
   mint: 'So11111111111111111111111111111111111111112',
@@ -58,7 +52,7 @@ export const JTO: Token = {
   mint: 'jtojtomepa8beP8AuQc6eXt5FriJwfFMwQx2v2f9mCL',
   symbol: 'JTO',
   name: 'Jito',
-  logo: 'https://metadata.jito.network/token/jto/icon.png',
+  logo: 'https://metadata.jito.network/token/jto/image',
   decimals: 9,
 }
 
@@ -66,7 +60,7 @@ export const WIF: Token = {
   mint: 'EKpQGSJtjMFqKZ9KQanSqYXRcF8fBopzLHYxdM65zcjm',
   symbol: 'WIF',
   name: 'dogwifhat',
-  logo: 'https://bafkreibk3covs5ltyqxa272uodhber2xfcmv2dfxyvlqzrcfhgrks52wm.ipfs.cf-ipfs.com',
+  logo: 'https://bafkreibk3covs5ltyqxa272uodhculbr6kea6betidfwy3ajsav2vjzyum.ipfs.dweb.link',
   decimals: 6,
 }
 
@@ -74,7 +68,7 @@ export const PYTH: Token = {
   mint: 'HZ1JovNiVvGrGNiiYvEozEVgZ58xaU3RKwX8eACQBCt3',
   symbol: 'PYTH',
   name: 'Pyth Network',
-  logo: 'https://pyth.network/token.svg',
+  logo: 'https://legacy.pyth.network/token.svg',
   decimals: 6,
 }
 
@@ -89,4 +83,3 @@ export const JITOSOL: Token = {
 export const SWAP_TOKENS: Token[] = [SOL, USDC, USDT, BONK, JUP, RAY, JTO, WIF, PYTH, JITOSOL]
 
 export const SLIPPAGE_OPTS = ['0.5', '1.0', '2.0'] as const
-export type SlippageOpt = (typeof SLIPPAGE_OPTS)[number]

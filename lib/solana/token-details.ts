@@ -57,8 +57,7 @@ async function fetchFromHelius(mint: string): Promise<TokenJupiterDetail> {
 
   const metadata = asset.content?.metadata
   const tokenInfo = asset.token_info
-  const logoURI =
-    asset.content?.links?.image ?? asset.content?.files?.[0]?.cdn_uri ?? null
+  const logoURI = asset.content?.links?.image ?? asset.content?.files?.[0]?.cdn_uri ?? null
 
   return {
     name: metadata?.name ?? null,
@@ -113,9 +112,7 @@ export async function fetchTokenJupiterDetail(
   network: Network,
 ): Promise<TokenJupiterDetail> {
   try {
-    return network === 'devnet'
-      ? await fetchFromHelius(mint)
-      : await fetchFromJupiter(mint)
+    return network === 'devnet' ? await fetchFromHelius(mint) : await fetchFromJupiter(mint)
   } catch {
     return EMPTY_DETAIL
   }
