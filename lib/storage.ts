@@ -1,3 +1,5 @@
+import { prefix } from '@/constants'
+
 import { createMMKV } from 'react-native-mmkv'
 
 class LocalStorage {
@@ -23,6 +25,4 @@ class LocalStorage {
   }
 }
 
-export const storage = new LocalStorage('my-app-storage')
-
-export const watchlistStorage = new LocalStorage('watchlist-storage')
+export const storage = new LocalStorage(`${prefix}-storage`)

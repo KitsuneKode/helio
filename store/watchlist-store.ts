@@ -1,8 +1,8 @@
 import { create } from 'zustand'
-import { persist, createJSONStorage } from 'zustand/middleware'
-import { watchlistStorage } from '@/lib/storage'
 
-const WATCHLIST_KEY = 'watchlist'
+import { persist, createJSONStorage } from 'zustand/middleware'
+import { storage } from '@/lib/storage'
+import { WATCHLIST_STORAGE_KEY } from '@/constants/watchlist'
 
 type WatchlistState = {
   watchlist: string[]
@@ -29,8 +29,8 @@ export const useWatchlistStore = create<WatchlistState>()(
       },
     }),
     {
-      name: 'watchlist-storage',
-      storage: createJSONStorage(() => watchlistStorage),
+      name: WATCHLIST_STORAGE_KEY,
+      storage: createJSONStorage(() => storage),
     },
   ),
 )

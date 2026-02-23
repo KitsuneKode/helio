@@ -1,4 +1,4 @@
-import { ActivityIndicator, Alert, Pressable, View } from 'react-native'
+import { ActivityIndicator, Alert, Pressable } from 'react-native'
 import { Wallet01Icon } from '@hugeicons/core-free-icons'
 import { Button } from '@/components/ui/button'
 import { Icon } from '@/components/ui/icon'
