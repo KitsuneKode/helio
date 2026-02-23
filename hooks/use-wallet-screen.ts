@@ -14,8 +14,9 @@ import { useWalletResetStore } from '@/store/wallet-reset-store'
 import { getMetaDataFromCacheOrFetch } from '@/lib/cache/token-metadata'
 import { fetchTokenJupiterDetail } from '@/lib/solana/token-details'
 import { TOKEN_PAGE, TXN_PAGE } from '@/constants/solana'
+import { SystemProgram } from '@solana/web3.js'
 
-const SOL_MINT = Sys
+const SOL_MINT = SystemProgram.programId.toBase58()
 
 type WalletData = {
   balance: GetBalanceResult
@@ -60,18 +61,6 @@ export function useWalletScreen(initialAddress?: string) {
     }
   }, [resetCount])
 
-  // Auto-search when navigated with an address param
-  useEffect(() => {
-    if (initialAddress && !autoSearchDone.current) {
-      autoSearchDone.current = true
-      setValue(initialAddress)
-      const timer = setTimeout(() => {
-        handleSearchAddress(initialAddress)
-      }, 100)
-      return () => clearTimeout(timer)
-    }
-  }, [initialAddress])
-
   const resetResults = () => setWalletData(null)
 
   const handleChangeValue = (text: string) => setValue(text)
@@ -93,7 +82,7 @@ export function useWalletScreen(initialAddress?: string) {
           getBalance(rpc, publicKey),
           getAllTokens(rpc, publicKey),
           getAllTransactions(rpc, publicKey),
-          fetchTokenJupiterDetail(SOL_MINT),
+          fetchTokenJupiterDetail(SOL_MINT, network),
         ])
 
         const firstPage = tokn.slice(0, TOKEN_PAGE)
@@ -107,12 +96,14 @@ export function useWalletScreen(initialAddress?: string) {
           solPriceUsd: solDetail.priceUsd,
         })
 
-        useHistoryStore.getState().trackWallet(addr)
+        useHistoryStore.getState().trackWallet(addr, network)
 
         if (firstPage.length > 0) {
-          getMetaDataFromCacheOrFetch(firstPage.map((t) => t.mint)).then((metaMap) => {
-            patchVisible(firstPage.map((t) => ({ ...t, ...metaMap.get(t.mint) })))
-          })
+          getMetaDataFromCacheOrFetch({ mints: firstPage.map((t) => t.mint), network }).then(
+            (metaMap) => {
+              patchVisible(firstPage.map((t) => ({ ...t, ...metaMap.get(t.mint) })))
+            },
+          )
         }
       } catch (err) {
         console.error('Error fetching data:', err as Error)
@@ -121,7 +112,7 @@ export function useWalletScreen(initialAddress?: string) {
         setLoading(false)
       }
     },
-    [rpc],
+    [rpc, network],
   )
 
   const handleSearch = async () => {
@@ -176,7 +167,10 @@ export function useWalletScreen(initialAddress?: string) {
       prev ? { ...prev, visibleTokens: [...prev.visibleTokens, ...nextSlice] } : prev,
     )
     try {
-      const metaMap = await getMetaDataFromCacheOrFetch(nextSlice.map((t) => t.mint))
+      const metaMap = await getMetaDataFromCacheOrFetch({
+        mints: nextSlice.map((t) => t.mint),
+        network,
+      })
 
       setWalletData((prev) => {
         if (!prev) return prev
@@ -217,6 +211,17 @@ export function useWalletScreen(initialAddress?: string) {
   const handleTransactionPress = (signature: string) => {
     router.push({ pathname: '/transaction/[signature]', params: { signature } })
   }
+  // Auto-search when navigated with an address param
+  useEffect(() => {
+    if (initialAddress && !autoSearchDone.current) {
+      autoSearchDone.current = true
+      setValue(initialAddress)
+      const timer = setTimeout(() => {
+        handleSearchAddress(initialAddress)
+      }, 100)
+      return () => clearTimeout(timer)
+    }
+  }, [initialAddress, handleSearchAddress])
 
   return {
     value,

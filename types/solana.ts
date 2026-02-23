@@ -28,11 +28,12 @@ export type GetTransactionsResult = {
   err: TransactionError | null
 }[]
 
-export type TokenMetadata = Omit<FetchMetadataFromJupiterResult, 'id' | 'name' | 'icon'> & {
-  tokenName: FetchMetadataFromJupiterResult['name']
-  logoURI: FetchMetadataFromJupiterResult['icon']
+export type TokenMetadata = {
+  tokenName: string | null
+  symbol: string | null
+  logoURI: string | null
+  decimals: number
+  tokenProgram: string
+  totalSupply: number
 }
-export type GetAllTokenMetadataFromJupiterResponse = Map<
-  FetchMetadataFromJupiterResult['id'],
-  TokenMetadata
->
+export type GetAllTokenMetadataResponse = Map<string, TokenMetadata>

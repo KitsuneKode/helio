@@ -17,6 +17,7 @@ import { LinksCard } from '@/components/token-detail/links-card'
 import { short } from '@/utils/format-text'
 import { fetchTokenJupiterDetail } from '@/lib/solana/token-details'
 import { useHistoryStore } from '@/store/history-store'
+import { useNetwork } from '@/context/network-context'
 import type { TokenJupiterDetail } from '@/types'
 
 export default function TokenDetailScreen() {
@@ -28,12 +29,13 @@ export default function TokenDetailScreen() {
     logoURI?: string
   }>()
 
+  const { network } = useNetwork()
   const [imgError, setImgError] = useState(false)
   const [jupiterDetail, setJupiterDetail] = useState<TokenJupiterDetail | null>(null)
   const [dataLoading, setDataLoading] = useState(true)
 
   useEffect(() => {
-    useHistoryStore.getState().trackToken(mint)
+    useHistoryStore.getState().trackToken(mint, network)
     let cancelled = false
     fetchTokenJupiterDetail(mint).then((detail) => {
       if (cancelled) return

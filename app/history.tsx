@@ -11,6 +11,7 @@ import { SectionLabel } from '@/components/ui/section-label'
 import { AnimatedCard } from '@/components/ui/animated-card'
 import { ThemeToggle } from '@/components/theme-toggle-button'
 import { useHistoryStore } from '@/store/history-store'
+import { useNetwork } from '@/context/network-context'
 import { getMetaDataFromCacheOrFetch } from '@/lib/cache/token-metadata'
 import { short } from '@/utils/format-text'
 import type { TokenMetadata } from '@/types'
@@ -23,8 +24,9 @@ type WalletRow = { type: 'wallet'; address: string; key: string }
 type ListItem = SectionHeader | TokenRow | WalletRow
 
 export default function HistoryScreen() {
-  const tokens = useHistoryStore((s) => s.tokens)
-  const wallets = useHistoryStore((s) => s.wallets)
+  const { network } = useNetwork()
+  const tokens = useHistoryStore((s) => s.data[network].tokens)
+  const wallets = useHistoryStore((s) => s.data[network].wallets)
   const clearAll = useHistoryStore((s) => s.clearAll)
 
   const [metaMap, setMetaMap] = useState<Map<string, TokenMetadata>>(new Map())
@@ -163,7 +165,7 @@ export default function HistoryScreen() {
           contentContainerStyle={{ paddingBottom: 100 }}
           ListFooterComponent={
             <View className="items-center px-4 pt-6">
-              <Pressable onPress={clearAll}>
+              <Pressable onPress={() => clearAll(network)}>
                 <Text className="text-destructive text-sm font-medium">Clear History</Text>
               </Pressable>
             </View>

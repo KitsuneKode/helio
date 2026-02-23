@@ -1,7 +1,7 @@
 import { TXN_PAGE } from '@/constants/solana'
 import {
   FetchMetadataFromJupiterResult,
-  GetAllTokenMetadataFromJupiterResponse,
+  GetAllTokenMetadataResponse,
   GetAllTokensBalanceResult,
   GetBalanceResult,
   GetTransactionsResult,
@@ -11,6 +11,9 @@ import { TOKEN_PROGRAM_ADDRESS } from '@solana-program/token'
 import { address, type Address, type Signature } from '@solana/kit'
 import axios, { isAxiosError } from 'axios'
 import { LAMPORTS_PER_SOL } from '@solana/web3.js'
+import config from '@/config'
+import { Network } from '@/context/network-context'
+import { fetchAllDigitalAsset } from '@metaplex-foundation/mpl-token-metadata-kit'
 
 type ValidatePublicKeyResult =
   | {
@@ -94,11 +97,11 @@ export const getTransactionDetail = async (rpc: SolanaRpc, signature: string) =>
 
 export const getAllTokenMetadataFromJupiter = async (
   mints: string[],
-): Promise<GetAllTokenMetadataFromJupiterResponse | undefined> => {
-  const mint = mints.join(',')
+): Promise<GetAllTokenMetadataResponse | undefined> => {
+  const mintString = mints.join(',')
   try {
     const res = await axios.get<FetchMetadataFromJupiterResult[]>(
-      `https://lite-api.jup.ag/tokens/v2/search?query=${mint}`,
+      `https://lite-api.jup.ag/tokens/v2/search?query=${mintString}`,
 
       {
         headers: {
@@ -124,6 +127,54 @@ export const getAllTokenMetadataFromJupiter = async (
   } catch (error) {
     if (isAxiosError(error)) {
       console.error('Axios error fetching token metadata from Jupiter:', error.message)
+      return
+    }
+  }
+}
+
+export const getAllTokenMetadataFromHelius = async (
+  mints: string[],
+): Promise<GetAllTokenMetadataResponse | undefined> => {
+  try {
+    const res = await axios.post(
+      config.EXPO_PUBLIC_DEV_NET_RPC_URL,
+      {
+        jsonrpc: '2.0',
+        id: 'helio',
+        method: 'getAssetBatch',
+        params: {
+          ids: mints,
+          options: { showFungible: true },
+        },
+      },
+      { headers: { 'Content-Type': 'application/json' } },
+    )
+
+    const assets = res.data?.result
+    if (!Array.isArray(assets)) return
+
+    const map: GetAllTokenMetadataResponse = new Map()
+    for (const asset of assets) {
+      if (!asset?.id) continue
+      const metadata = asset.content?.metadata
+      const tokenInfo = asset.token_info
+      const logoURI =
+        asset.content?.links?.image ?? asset.content?.files?.[0]?.cdn_uri ?? null
+
+      map.set(asset.id, {
+        tokenName: metadata?.name ?? null,
+        symbol: metadata?.symbol ?? tokenInfo?.symbol ?? null,
+        logoURI,
+        decimals: tokenInfo?.decimals ?? 0,
+        tokenProgram: tokenInfo?.token_program ?? '',
+        totalSupply: tokenInfo?.supply ?? 0,
+      })
+    }
+
+    return map
+  } catch (error) {
+    if (isAxiosError(error)) {
+      console.error('Axios error fetching token metadata from Helius:', error.message)
       return
     }
   }

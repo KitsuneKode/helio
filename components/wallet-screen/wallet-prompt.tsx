@@ -7,6 +7,7 @@ import { Text } from '@/components/ui/text'
 import { SectionLabel } from '@/components/ui/section-label'
 import { useHistoryStore } from '@/store/history-store'
 import { useWatchlistStore } from '@/store/watchlist-store'
+import { useNetwork } from '@/context/network-context'
 import { getMetaDataFromCacheOrFetch } from '@/lib/cache/token-metadata'
 import { short } from '@/utils/format-text'
 import type { TokenMetadata } from '@/types'
@@ -17,7 +18,8 @@ type Props = {
 }
 
 export const WalletPrompt = ({ onQuickSearch }: Props) => {
-  const recentWallets = useHistoryStore((s) => s.wallets)
+  const { network } = useNetwork()
+  const recentWallets = useHistoryStore((s) => s.data[network].wallets)
   const watchlist = useWatchlistStore((s) => s.watchlist)
 
   const [watchlistMeta, setWatchlistMeta] = useState<Map<string, TokenMetadata>>(new Map())

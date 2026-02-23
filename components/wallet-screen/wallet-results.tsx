@@ -40,7 +40,11 @@ export function WalletResults({
 
   return (
     <>
-      <BalanceCard balance={walletData.balance.balance} address={walletData.balance.address} solPriceUsd={walletData.solPriceUsd} />
+      <BalanceCard
+        balance={walletData.balance.balance}
+        address={walletData.balance.address}
+        solPriceUsd={walletData.solPriceUsd}
+      />
       <TokenSection
         allTokens={walletData.allTokens}
         visibleTokens={walletData.visibleTokens}

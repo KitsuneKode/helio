@@ -1,6 +1,9 @@
 import { TokenMetadata } from '@/types'
-import { getAllTokenMetadataFromJupiter } from '../solana'
+import { getAllTokenMetadataFromJupiter, getAllTokenMetadataFromHelius } from '../solana'
 import { storage } from '../storage'
+import type { Network } from '@/context/network-context'
+
+type Config = { mints: string[]; network: Network }
 
 const getFromCache = (mint: string): TokenMetadata | null => {
   try {
@@ -12,15 +15,18 @@ const getFromCache = (mint: string): TokenMetadata | null => {
   }
 }
 
-const getMetaDataAndMissingKeysFromCache = (mints: string[]) => {
+const getMetaDataAndMissingKeysFromCache = (mints: string[], network: Network) => {
   return mints.reduce(
     (acc, mint) => {
-      const cached = storage.contains(mint) ? getFromCache(mint) : null
+      const mintWithNetworkSuffix = `${mint}-${network}`
+      const cached = storage.contains(mintWithNetworkSuffix)
+        ? getFromCache(mintWithNetworkSuffix)
+        : null
 
       if (cached) {
         acc.present.set(mint, cached)
       } else {
-        acc.missing.push(mint)
+        acc.missing.push(mintWithNetworkSuffix)
       }
 
       return acc
@@ -29,18 +35,27 @@ const getMetaDataAndMissingKeysFromCache = (mints: string[]) => {
   )
 }
 
-export const getMetaDataFromCacheOrFetch = async (mints: string[]) => {
-  const { present, missing } = getMetaDataAndMissingKeysFromCache(mints)
+export const getMetaDataFromCacheOrFetch = async (config: Config) => {
+  const { mints, network } = config
+  const { present, missing } = getMetaDataAndMissingKeysFromCache(mints, network)
 
   if (missing.length !== 0) {
-    const metadataFromJupiter = await getAllTokenMetadataFromJupiter(missing)
+    const metadataFromJupiter =
+      network === 'devnet'
+        ? await getAllTokenMetadataFromHelius(buildMints(missing))
+        : await getAllTokenMetadataFromJupiter(buildMints(missing))
     if (!metadataFromJupiter) return present
 
     metadataFromJupiter.forEach((metadata, mint) => {
-      storage.setItem(mint, JSON.stringify(metadata))
+      const mintWithNetworkSuffix = `${mint}-${network}`
+      storage.setItem(mintWithNetworkSuffix, JSON.stringify(metadata))
       present.set(mint, metadata)
     })
   }
 
   return present
+}
+
+function buildMints(missing: string[]): string[] {
+  return missing.map((msng) => msng.split('-')[0])
 }
