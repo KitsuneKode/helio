@@ -3,7 +3,8 @@ import { FlatList, Image, Modal, Pressable, View } from 'react-native'
 import { CancelCircleIcon, CheckmarkCircle01Icon } from '@hugeicons/core-free-icons'
 import { Icon } from '@/components/ui/icon'
 import { Text } from '@/components/ui/text'
-import { SWAP_TOKENS, type Token } from '@/types/swap-screen'
+import { type Token } from '@/types'
+import { SWAP_TOKENS } from '@/constants/swap'
 
 type TokenPickerModalProps = {
   visible: boolean
@@ -48,9 +49,7 @@ function TokenRow({
         <Text className="text-foreground text-sm font-bold">{token.symbol}</Text>
         <Text className="text-muted-foreground text-xs">{token.name}</Text>
       </View>
-      {isSelected && (
-        <Icon icon={CheckmarkCircle01Icon} className="text-primary size-5" />
-      )}
+      {isSelected && <Icon icon={CheckmarkCircle01Icon} className="text-primary size-5" />}
     </Pressable>
   )
 }

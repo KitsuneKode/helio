@@ -13,7 +13,7 @@ type FetchSwapQuoteParams = {
   slippageBps: number
 }
 
-const SWAP_JUP_URL = 'https://quote.jup.ag/v6'
+const SWAP_JUP_URL = 'https://lite-api.jup.ag/swap/v1/'
 
 export const fetchSwapQuote = async ({
   inputMint,
@@ -30,6 +30,8 @@ export const fetchSwapQuote = async ({
     })
     const res = await axios.get<SwapQuote>(`${SWAP_JUP_URL}/quote?${params.toString()}`)
     if (!res.data) return null
+
+    console.log('Swap quote response:', res.data)
     return res.data
   } catch {
     return null

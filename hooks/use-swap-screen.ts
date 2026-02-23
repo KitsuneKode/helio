@@ -9,7 +9,9 @@ import {
   parsePriceImpact,
   rawToDisplay,
 } from '@/components/swap-screen/swap-formatters'
-import { SOL, type SlippageOpt, type Token, USDC } from '@/types/swap-screen'
+import type { SlippageOpt, Token } from '@/types'
+import { SOL, USDC } from '@/constants/swap'
+
 import { SwapQuote } from '@/types'
 import { useUserWallet } from './use-user-wallet'
 import { useNetwork } from '@/context/network-context'

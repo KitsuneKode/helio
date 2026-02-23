@@ -51,9 +51,7 @@ export default function SwapScreen() {
               placeholderColor={swap.placeholderColor}
               flipOpacity={swap.flipOpacity}
               outputOpacity={swap.outputOpacity}
-              middleSlot={
-                <SwapFlipButton flipRotate={swap.flipRotate} onPress={swap.handleFlip} />
-              }
+              middleSlot={<SwapFlipButton flipRotate={swap.flipRotate} onPress={swap.handleFlip} />}
               onFromPress={() => setPickerSide('from')}
               onToPress={() => setPickerSide('to')}
             />
@@ -93,12 +91,8 @@ export default function SwapScreen() {
                 if (pickerSide === 'from') swap.handleSelectFrom(token)
                 else if (pickerSide === 'to') swap.handleSelectTo(token)
               }}
-              selectedMint={
-                pickerSide === 'from' ? swap.fromToken.mint : swap.toToken.mint
-              }
-              otherMint={
-                pickerSide === 'from' ? swap.toToken.mint : swap.fromToken.mint
-              }
+              selectedMint={pickerSide === 'from' ? swap.fromToken.mint : swap.toToken.mint}
+              otherMint={pickerSide === 'from' ? swap.toToken.mint : swap.fromToken.mint}
             />
           </>
         )}

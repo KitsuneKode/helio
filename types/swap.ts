@@ -1,3 +1,5 @@
+import { SLIPPAGE_OPTS } from '@/constants/swap'
+
 export type RoutePlanStep = {
   swapInfo: {
     ammKey: string
@@ -41,3 +43,13 @@ export type executeSwapTransactionParams = { quoteResponse: SwapQuote; userPubli
 export type SwapExecutionResult = {
   transaction: Uint8Array
 }
+
+export type Token = {
+  mint: string
+  symbol: string
+  name: string
+  logo: string
+  decimals: number
+}
+
+export type SlippageOpt = (typeof SLIPPAGE_OPTS)[number]

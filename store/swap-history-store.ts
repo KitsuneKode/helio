@@ -3,7 +3,7 @@ import { persist, createJSONStorage } from 'zustand/middleware'
 import { storage } from '@/lib/storage'
 import { MAX_SWAP_ENTRIES, SWAP_HISTORY_STORAGE_KEY } from '@/constants/history'
 import type { Network } from '@/context/network-context'
-import type { Token } from '@/types/swap-screen'
+import type { Token } from '@/types'
 
 export type SwapHistoryEntry = {
   id: string
