@@ -101,19 +101,18 @@ export default function TransactionDetailScreen() {
           // Resolve token symbols + logos from cache/Jupiter
           if (tokenTransfers.length > 0) {
             const mints = tokenTransfers.map((t) => t.mint)
-            getMetaDataFromCacheOrFetch({ mints, network }).then((metaMap) => {
-              if (cancelled) return
-              setDetail((prev) => {
-                if (!prev) return prev
-                return {
-                  ...prev,
-                  tokenTransfers: prev.tokenTransfers.map((t) => ({
-                    ...t,
-                    symbol: metaMap.get(t.mint)?.symbol ?? t.symbol,
-                    logoURI: metaMap.get(t.mint)?.logoURI ?? t.logoURI,
-                  })),
-                }
-              })
+            const metaMap = await getMetaDataFromCacheOrFetch({ mints, network })
+            if (cancelled) return
+            setDetail((prev) => {
+              if (!prev) return prev
+              return {
+                ...prev,
+                tokenTransfers: prev.tokenTransfers.map((t) => ({
+                  ...t,
+                  symbol: metaMap.get(t.mint)?.symbol ?? t.symbol,
+                  logoURI: metaMap.get(t.mint)?.logoURI ?? t.logoURI,
+                })),
+              }
             })
           }
         }

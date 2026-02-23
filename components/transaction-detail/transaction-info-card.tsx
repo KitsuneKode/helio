@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { Pressable, View } from 'react-native'
 import * as Clipboard from 'expo-clipboard'
 import * as Haptics from 'expo-haptics'
@@ -26,12 +26,20 @@ export function TransactionInfoCard({
   delay,
 }: TransactionInfoCardProps) {
   const [copiedSig, setCopiedSig] = useState(false)
+  const copyTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+
+  useEffect(() => {
+    return () => {
+      if (copyTimerRef.current) clearTimeout(copyTimerRef.current)
+    }
+  }, [])
 
   const handleCopySig = async () => {
     await Clipboard.setStringAsync(signature)
     await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light)
     setCopiedSig(true)
-    setTimeout(() => setCopiedSig(false), 2000)
+    if (copyTimerRef.current) clearTimeout(copyTimerRef.current)
+    copyTimerRef.current = setTimeout(() => setCopiedSig(false), 2000)
   }
 
   return (

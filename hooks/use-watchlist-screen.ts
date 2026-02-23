@@ -30,7 +30,8 @@ export function useWatchlistScreen() {
     let cancelled = false
     setLoading(true)
 
-    getMetaDataFromCacheOrFetch({ mints: watchlist, network }).then((metaMap) => {
+    const load = async () => {
+      const metaMap = await getMetaDataFromCacheOrFetch({ mints: watchlist, network })
       if (cancelled) return
 
       const classifiedTokens: WatchlistToken[] = []
@@ -50,7 +51,8 @@ export function useWatchlistScreen() {
       setTokenPage(1)
       setWalletPage(1)
       setLoading(false)
-    })
+    }
+    load()
 
     return () => {
       cancelled = true

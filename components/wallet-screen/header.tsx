@@ -8,8 +8,8 @@ export function Header() {
   return (
     <View className="mt-4 flex-row items-center justify-between pb-6">
       <View className="justify-start gap-0.5">
-        <Text className="text-foreground text-2xl font-bold tracking-tight">SolScan</Text>
-        <Text className="text-muted-foreground text-xs">Explore any Solana wallet</Text>
+        <Text className="text-foreground text-2xl font-bold tracking-tight">Helio</Text>
+        <Text className="text-muted-foreground text-xs">Your Solana Companion</Text>
       </View>
       <View className="flex-row items-center gap-1">
         <WalletConnectButton compact />

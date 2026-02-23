@@ -26,12 +26,13 @@ function TokenLogo({ uri, size = 28 }: { uri: string; size?: number }) {
   )
 }
 
-function TokenChip({ token }: { token: Token }) {
+function TokenChip({ token, onPress }: { token: Token; onPress?: () => void }) {
   const scale = useSharedValue(1)
   const animStyle = useAnimatedStyle(() => ({ transform: [{ scale: scale.value }] }))
 
   return (
     <Pressable
+      onPress={onPress}
       onPressIn={() => {
         scale.value = withTiming(0.93, { duration: 80 })
       }}
@@ -64,6 +65,8 @@ type SwapAmountCardProps = {
   flipOpacity: SharedValue<number>
   outputOpacity: SharedValue<number>
   middleSlot?: ReactNode
+  onFromPress?: () => void
+  onToPress?: () => void
 }
 
 export function SwapAmountCard({
@@ -80,6 +83,8 @@ export function SwapAmountCard({
   flipOpacity,
   outputOpacity,
   middleSlot,
+  onFromPress,
+  onToPress,
 }: SwapAmountCardProps) {
   const flipFadeStyle = useAnimatedStyle(() => ({
     opacity: flipOpacity.value,
@@ -100,7 +105,7 @@ export function SwapAmountCard({
             You Sell
           </Text>
           <AnimatedViewUniwind style={flipFadeStyle}>
-            <TokenChip token={fromToken} />
+            <TokenChip token={fromToken} onPress={onFromPress} />
           </AnimatedViewUniwind>
         </View>
         <AnimatedViewUniwind style={flipFadeStyle}>
@@ -131,7 +136,7 @@ export function SwapAmountCard({
             You Buy
           </Text>
           <AnimatedViewUniwind style={flipFadeStyle}>
-            <TokenChip token={toToken} />
+            <TokenChip token={toToken} onPress={onToPress} />
           </AnimatedViewUniwind>
         </View>
 

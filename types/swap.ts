@@ -19,4 +19,25 @@ export type SwapQuote = {
   routePlan: RoutePlanStep[]
   otherAmountThreshold: string
   slippageBps: number
+  contextSlot: number
+  timeTaken: number
+  swapMode: 'ExactIn' | 'ExactOut'
+}
+
+export type SwapExecutionResponse = {
+  swapTransaction: string
+  lastValidBlockHeight: number
+  prioritizationFeeLamports: number
+  dynamicSlippageReport: {
+    slippageBps: number
+    otherAmount: number
+    simulatedIncurredSlippageBps: number
+    amplificationRatio: number
+  }
+}
+
+export type executeSwapTransactionParams = { quoteResponse: SwapQuote; userPublicKey: string }
+
+export type SwapExecutionResult = {
+  transaction: Uint8Array
 }

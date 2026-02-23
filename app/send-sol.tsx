@@ -49,17 +49,22 @@ export default function SendSolScreen() {
     if (!connected) return
     let cancelled = false
 
-    Promise.all([getBalance(), fetchTokenJupiterDetail(SOL_MINT, network)]).then(([bal, detail]) => {
+    const load = async () => {
+      const [bal, detail] = await Promise.all([
+        getBalance(),
+        fetchTokenJupiterDetail(SOL_MINT, network),
+      ])
       if (cancelled) return
       setBalance(bal)
       setSolPriceUsd(detail.priceUsd)
       setLoadingBalance(false)
-    })
+    }
+    load()
 
     return () => {
       cancelled = true
     }
-  }, [connected, getBalance])
+  }, [connected, getBalance, network])
 
   const parsedAmount = parseFloat(amount) || 0
   const usdEstimate = solPriceUsd != null ? parsedAmount * solPriceUsd : null

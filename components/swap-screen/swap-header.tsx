@@ -1,5 +1,6 @@
 import { View } from 'react-native'
 import { ThemeToggle } from '@/components/theme-toggle-button'
+import { WalletConnectButton } from '@/components/wallet-connect-button'
 import { Text } from '@/components/ui/text'
 
 export function SwapHeader() {
@@ -11,7 +12,10 @@ export function SwapHeader() {
           via Jupiter Aggregator
         </Text>
       </View>
-      <ThemeToggle />
+      <View className="flex-row items-center gap-1">
+        <WalletConnectButton compact />
+        <ThemeToggle />
+      </View>
     </View>
   )
 }

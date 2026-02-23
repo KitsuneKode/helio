@@ -27,9 +27,11 @@ export const WalletPrompt = ({ onQuickSearch }: Props) => {
   useEffect(() => {
     if (watchlist.length === 0) return
     let cancelled = false
-    getMetaDataFromCacheOrFetch({ mints: watchlist, network }).then((map) => {
+    const load = async () => {
+      const map = await getMetaDataFromCacheOrFetch({ mints: watchlist, network })
       if (!cancelled) setWatchlistMeta(map)
-    })
+    }
+    load()
     return () => {
       cancelled = true
     }

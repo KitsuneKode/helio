@@ -37,13 +37,14 @@ export default function TokenDetailScreen() {
   useEffect(() => {
     useHistoryStore.getState().trackToken(mint, network)
     let cancelled = false
-    fetchTokenJupiterDetail(mint, network).then((detail) => {
+    const load = async () => {
+      const detail = await fetchTokenJupiterDetail(mint, network)
       if (cancelled) return
-
       console.log('Fetched Jupiter detail for mint', mint, detail)
       setJupiterDetail(detail)
       setDataLoading(false)
-    })
+    }
+    load()
     return () => {
       cancelled = true
     }

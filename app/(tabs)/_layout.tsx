@@ -1,4 +1,5 @@
 import { Icon } from '@/components/ui/icon'
+import { useSwapResetStore } from '@/store/swap-reset-store'
 import { useWalletResetStore } from '@/store/wallet-reset-store'
 import { THEME } from '@/lib/theme'
 import { Exchange03Icon, Home12Icon, Settings01Icon } from '@hugeicons/core-free-icons'
@@ -9,6 +10,7 @@ import { Platform } from 'react-native'
 
 export default function Layout() {
   const triggerReset = useWalletResetStore((s) => s.triggerReset)
+  const triggerSwapReset = useSwapResetStore((s) => s.triggerReset)
 
   useEffect(() => {
     QuickActions.setItems([
@@ -61,6 +63,13 @@ export default function Layout() {
           tabBarIcon: ({ color, size }) => <Icon icon={Exchange03Icon} size={size} color={color} />,
           tabBarLabelStyle: { fontSize: 12 },
         }}
+        listeners={({ navigation }) => ({
+          tabPress: () => {
+            if (navigation.isFocused()) {
+              triggerSwapReset()
+            }
+          },
+        })}
       />
       <Tabs.Screen
         name="settings"

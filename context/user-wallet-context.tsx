@@ -1,12 +1,18 @@
 import { createContext, useContext, useState, useCallback } from 'react'
 import { transact, Web3MobileWallet } from '@solana-mobile/mobile-wallet-adapter-protocol-web3js'
-import { PublicKey, Transaction, SystemProgram, LAMPORTS_PER_SOL } from '@solana/web3.js'
+import {
+  PublicKey,
+  Transaction,
+  SystemProgram,
+  LAMPORTS_PER_SOL,
+  VersionedTransaction,
+} from '@solana/web3.js'
 import { address } from '@solana/kit'
 import { useNetwork } from '@/context/network-context'
 
 const APP_IDENTITY = {
-  name: 'SolScan',
-  uri: 'https://solscan.io',
+  name: 'Helio',
+  uri: 'https://helio.app',
   icon: 'favicon.ico',
 }
 
@@ -15,10 +21,12 @@ type UserWalletContextValue = {
   connected: boolean
   connecting: boolean
   sending: boolean
+  signing: boolean
   connect: () => Promise<PublicKey>
   disconnect: () => void
   getBalance: () => Promise<number>
-  sendSOL: (toAddress: string, amountSOL: number) => Promise<any>
+  sendSOL: (toAddress: string, amountSOL: number) => Promise<string>
+  signAndSendTransaction: (transaction: VersionedTransaction) => Promise<string>
 }
 
 const UserWalletContext = createContext<UserWalletContextValue | null>(null)
@@ -26,6 +34,7 @@ const UserWalletContext = createContext<UserWalletContextValue | null>(null)
 export function UserWalletProvider({ children }: { children: React.ReactNode }) {
   const [publicKey, setPublicKey] = useState<PublicKey | null>(null)
   const [connecting, setConnecting] = useState(false)
+  const [signing, setSigning] = useState(false)
   const [sending, setSending] = useState(false)
   const { rpc, network } = useNetwork()
 
@@ -34,7 +43,7 @@ export function UserWalletProvider({ children }: { children: React.ReactNode }) 
     try {
       const authResult = await transact(async (wallet: Web3MobileWallet) => {
         const result = await wallet.authorize({
-          chain: `solana:${network}`,
+          chain: `solana:mainnet-beta`,
           identity: APP_IDENTITY,
         })
         return result
@@ -48,7 +57,7 @@ export function UserWalletProvider({ children }: { children: React.ReactNode }) 
     } finally {
       setConnecting(false)
     }
-  }, [network])
+  }, [])
 
   const disconnect = useCallback(() => {
     setPublicKey(null)
@@ -97,17 +106,39 @@ export function UserWalletProvider({ children }: { children: React.ReactNode }) 
     [publicKey, rpc, network],
   )
 
+  const signAndSendTransaction = useCallback(async (transaction: VersionedTransaction) => {
+    setSigning(true)
+    try {
+      const txSignature = await transact(async (wallet: Web3MobileWallet) => {
+        await wallet.authorize({
+          chain: 'solana:mainnet-beta',
+          identity: APP_IDENTITY,
+        })
+        const signatures = await wallet.signAndSendTransactions({
+          transactions: [transaction],
+        })
+
+        return signatures[0]
+      })
+      return txSignature
+    } finally {
+      setSigning(false)
+    }
+  }, [])
+
   return (
     <UserWalletContext.Provider
       value={{
         publicKey,
         connected: !!publicKey,
         connecting,
+        signing,
         sending,
         connect,
         disconnect,
         getBalance,
         sendSOL,
+        signAndSendTransaction,
       }}
     >
       {children}

@@ -31,6 +31,7 @@ export function useWalletScreen(initialAddress?: string) {
   const { rpc, network } = useNetwork()
   const resetCount = useWalletResetStore((s) => s.resetCount)
   const autoSearchDone = useRef(false)
+  const mountedRef = useRef(true)
 
   const [value, setValue] = useState<string>(initialAddress ?? '')
   const [loading, setLoading] = useState(false)
@@ -46,6 +47,12 @@ export function useWalletScreen(initialAddress?: string) {
 
   const patchVisible = (tokens: GetTokensResult) =>
     setWalletData((prev) => (prev ? { ...prev, visibleTokens: tokens } : prev))
+
+  useEffect(() => {
+    return () => {
+      mountedRef.current = false
+    }
+  }, [])
 
   useEffect(() => {
     setValue('')
@@ -100,11 +107,12 @@ export function useWalletScreen(initialAddress?: string) {
         useHistoryStore.getState().trackWallet(addr, network)
 
         if (firstPage.length > 0) {
-          getMetaDataFromCacheOrFetch({ mints: firstPage.map((t) => t.mint), network }).then(
-            (metaMap) => {
-              patchVisible(firstPage.map((t) => ({ ...t, ...metaMap.get(t.mint) })))
-            },
-          )
+          const metaMap = await getMetaDataFromCacheOrFetch({
+            mints: firstPage.map((t) => t.mint),
+            network,
+          })
+          if (!mountedRef.current) return
+          patchVisible(firstPage.map((t) => ({ ...t, ...metaMap.get(t.mint) })))
         }
       } catch (err) {
         console.error('Error fetching data:', err as Error)

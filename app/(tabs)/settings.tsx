@@ -97,7 +97,7 @@ export default function SettingsScreen() {
 
         {/* Footer */}
         <View className="mt-8 items-center">
-          <Text className="text-muted-foreground text-xs">SolScan v1.0.0</Text>
+          <Text className="text-muted-foreground text-xs">Helio v1.0.0</Text>
         </View>
       </ScrollView>
     </SafeAreaViewUniwind>

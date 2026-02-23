@@ -37,9 +37,11 @@ export default function HistoryScreen() {
   useEffect(() => {
     if (tokens.length === 0) return
     let cancelled = false
-    getMetaDataFromCacheOrFetch({ mints: tokens.map((t) => t.mint), network }).then((map) => {
+    const load = async () => {
+      const map = await getMetaDataFromCacheOrFetch({ mints: tokens.map((t) => t.mint), network })
       if (!cancelled) setMetaMap(map)
-    })
+    }
+    load()
     return () => {
       cancelled = true
     }
