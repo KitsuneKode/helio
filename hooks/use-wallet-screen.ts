@@ -15,7 +15,7 @@ import { getMetaDataFromCacheOrFetch } from '@/lib/cache/token-metadata'
 import { fetchTokenJupiterDetail } from '@/lib/solana/token-details'
 import { TOKEN_PAGE, TXN_PAGE } from '@/constants/solana'
 
-const SOL_MINT = 'So11111111111111111111111111111111111111112'
+const SOL_MINT = Sys
 
 type WalletData = {
   balance: GetBalanceResult

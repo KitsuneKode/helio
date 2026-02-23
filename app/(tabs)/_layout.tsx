@@ -3,9 +3,35 @@ import { useWalletResetStore } from '@/store/wallet-reset-store'
 import { THEME } from '@/lib/theme'
 import { Exchange03Icon, Home12Icon, Settings01Icon } from '@hugeicons/core-free-icons'
 import { Tabs } from 'expo-router'
+import { useEffect } from 'react'
+import * as QuickActions from 'expo-quick-actions'
+import { Platform } from 'react-native'
 
 export default function Layout() {
   const triggerReset = useWalletResetStore((s) => s.triggerReset)
+
+  useEffect(() => {
+    QuickActions.setItems([
+      {
+        title: 'Watchlist',
+        icon: Platform.OS === 'ios' ? 'symbol:star.bubble.fill' : 'velocity',
+        id: '0',
+        params: { href: '/watchlist' },
+      },
+      {
+        title: 'Swap',
+        icon: Platform.OS === 'ios' ? 'symbol:arrow.triangle.2.circlepath' : 'velocity',
+        id: '1',
+        params: { href: '/swap' },
+      },
+      {
+        title: 'Settings',
+        icon: Platform.OS === 'ios' ? 'symbol:gearshape.fill' : 'velocity',
+        id: '2',
+        params: { href: '/settings' },
+      },
+    ])
+  }, [])
 
   return (
     <Tabs>

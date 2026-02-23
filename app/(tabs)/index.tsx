@@ -8,8 +8,6 @@ import { BackToTopButton } from '@/components/back-to-top-button'
 import { SafeAreaViewUniwind } from '@/components/styled-uniwind-components'
 import { useRef } from 'react'
 import { KeyboardAvoidingView, Platform, Pressable, ScrollView, View } from 'react-native'
-import { ArrowUp01Icon } from '@hugeicons/core-free-icons'
-import { Icon } from '@/components/ui/icon'
 import { Text } from '@/components/ui/text'
 import { useSharedValue } from 'react-native-reanimated'
 

@@ -20,8 +20,9 @@ import { fetchTokenJupiterDetail } from '@/lib/solana/token-details'
 import { isValidPublicKey } from '@/lib/solana'
 import { short } from '@/utils/format-text'
 import { useResolveClassNames } from 'uniwind'
+import { SystemProgram } from '@solana/web3.js'
 
-const SOL_MINT = 'So11111111111111111111111111111111111111112'
+const SOL_MINT = SystemProgram.programId.toString()
 
 function computeFontSize(val: string): number {
   if (val.length <= 5) return 40

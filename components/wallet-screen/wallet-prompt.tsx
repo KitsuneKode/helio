@@ -1,12 +1,7 @@
 import { useEffect, useState } from 'react'
 import { Image, Pressable, ScrollView, View } from 'react-native'
 import { Link, router } from 'expo-router'
-import {
-  Wallet01Icon,
-  Coins01Icon,
-  ArrowRight01FreeIcons,
-  ArrowRight02FreeIcons,
-} from '@hugeicons/core-free-icons'
+import { Wallet01Icon, Coins01Icon, ArrowRight02FreeIcons } from '@hugeicons/core-free-icons'
 import { Icon } from '@/components/ui/icon'
 import { Text } from '@/components/ui/text'
 import { SectionLabel } from '@/components/ui/section-label'

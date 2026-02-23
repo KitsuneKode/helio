@@ -26,7 +26,6 @@ export default function RootLayout() {
           <StatusBar style={theme === 'dark' ? 'light' : 'dark'} />
           <Stack>
             <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-            <Stack.Screen name="default" options={{ headerShown: false }} />
             <Stack.Screen
               name="transaction/[signature]"
               options={{
