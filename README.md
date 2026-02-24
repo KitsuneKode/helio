@@ -11,6 +11,8 @@
 [![React Native](https://img.shields.io/badge/React_Native-0.81-blue.svg)](https://reactnative.dev)
 [![Expo](https://img.shields.io/badge/Expo-SDK_53-black.svg)](https://expo.dev)
 
+[**Download APK**](https://github.com/KitsuneKode/helio/releases/latest/download/helio.apk)
+
 </div>
 
 <!-- Screenshots: Replace with 4 app screenshots side by side
@@ -45,7 +47,13 @@ Helio is a mobile Solana explorer and wallet built with React Native. No single 
 - **Mainnet + Devnet** with custom RPC support
 - **Dark/light theme**
 
+## Try It Out
+
+Grab the latest APK from [GitHub Releases](https://github.com/KitsuneKode/helio/releases/latest) and install it on any Android device. You'll need a Solana wallet app (Phantom/Solflare) installed for wallet features.
+
 ## Getting Started
+
+> The section below is for developers who want to build from source.
 
 ### Requirements
 
