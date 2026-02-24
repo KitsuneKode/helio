@@ -10,7 +10,8 @@ import {
 import { TOKEN_PROGRAM_ADDRESS } from '@solana-program/token'
 import { address, type Address, type Signature } from '@solana/kit'
 import axios, { isAxiosError } from 'axios'
-import { LAMPORTS_PER_SOL } from '@solana/web3.js'
+
+const LAMPORTS_PER_SOL = 1_000_000_000
 type ValidatePublicKeyResult =
   | {
       success: true

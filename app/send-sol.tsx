@@ -20,10 +20,10 @@ import { fetchTokenJupiterDetail } from '@/lib/solana/token-details'
 import { isValidPublicKey } from '@/lib/solana'
 import { useNetwork } from '@/context/network-context'
 import { short } from '@/utils/format-text'
+import { useWalletRefreshStore } from '@/store/wallet-refresh-store'
 import { useResolveClassNames } from 'uniwind'
-import { SystemProgram } from '@solana/web3.js'
 
-const SOL_MINT = SystemProgram.programId.toString()
+const SOL_MINT = '11111111111111111111111111111111'
 
 function computeFontSize(val: string): number {
   if (val.length <= 5) return 40
@@ -34,6 +34,7 @@ function computeFontSize(val: string): number {
 
 export default function SendSolScreen() {
   const { publicKey, connected, sending, sendSOL, getBalance } = useUserWallet()
+  const triggerRefresh = useWalletRefreshStore((s) => s.triggerRefresh)
   const { network, heliusDevnetRpcUrl } = useNetwork()
   const { color: placeholderColor } = useResolveClassNames('text-muted-foreground/40')
   const { color: inputTextColor } = useResolveClassNames('text-foreground')
@@ -70,7 +71,7 @@ export default function SendSolScreen() {
   const usdEstimate = solPriceUsd != null ? parsedAmount * solPriceUsd : null
   const recipientValid = recipient.trim().length > 0 && isValidPublicKey(recipient.trim()).success
   const hasEnoughBalance = balance != null && parsedAmount > 0 && parsedAmount <= balance
-  const canSend = (recipientValid && hasEnoughBalance && !sending) || true
+  const canSend = recipientValid && hasEnoughBalance && !sending
 
   const handleMaxPress = () => {
     if (balance != null) {
@@ -85,8 +86,23 @@ export default function SendSolScreen() {
 
     try {
       const sig = await sendSOL(recipient.trim(), parsedAmount)
+
+      // Reset form and refresh balance
+      setRecipient('')
+      setAmount('')
+      getBalance().then((bal) => setBalance(bal))
+      triggerRefresh()
+
       Alert.alert('Transaction Sent', `Signature: ${short(String(sig), 8)}`, [
-        { text: 'OK', onPress: () => router.back() },
+        { text: 'Done' },
+        {
+          text: 'View Transaction',
+          onPress: () =>
+            router.push({
+              pathname: '/transaction/[signature]',
+              params: { signature: String(sig) },
+            }),
+        },
       ])
     } catch (err: any) {
       Alert.alert('Send Failed', err?.message ?? 'Transaction failed. Please try again.')
@@ -132,7 +148,7 @@ export default function SendSolScreen() {
               Your Wallet
             </Text>
             <Text className="text-foreground font-mono text-sm">
-              {publicKey ? short(publicKey.toBase58(), 6) : ''}
+              {publicKey ? short(publicKey, 6) : ''}
             </Text>
           </View>
           <Separator />

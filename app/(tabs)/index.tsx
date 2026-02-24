@@ -7,7 +7,14 @@ import { useUserWallet } from '@/context/user-wallet-context'
 import { BackToTopButton } from '@/components/back-to-top-button'
 import { SafeAreaViewUniwind } from '@/components/styled-uniwind-components'
 import { useRef } from 'react'
-import { KeyboardAvoidingView, Platform, Pressable, ScrollView, View } from 'react-native'
+import {
+  KeyboardAvoidingView,
+  Platform,
+  Pressable,
+  RefreshControl,
+  ScrollView,
+  View,
+} from 'react-native'
 import { Text } from '@/components/ui/text'
 import { useSharedValue } from 'react-native-reanimated'
 
@@ -18,8 +25,7 @@ const WalletScreen = () => {
   const scrollY = useSharedValue(0)
 
   // Prefer explicit nav param, then connected wallet
-  const initialAddress =
-    walletAddress ?? (connected && publicKey ? publicKey.toBase58() : undefined)
+  const initialAddress = walletAddress ?? (connected && publicKey ? publicKey : undefined)
   const wallet = useWalletScreen(initialAddress)
 
   return (
@@ -36,6 +42,9 @@ const WalletScreen = () => {
           onScroll={(e) => {
             scrollY.value = e.nativeEvent.contentOffset.y
           }}
+          refreshControl={
+            <RefreshControl refreshing={wallet.refreshing} onRefresh={wallet.handleRefresh} />
+          }
         >
           <Header />
           <WalletSearchForm

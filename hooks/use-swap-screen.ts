@@ -13,11 +13,10 @@ import type { SlippageOpt, Token } from '@/types'
 import { SOL, USDC } from '@/constants/swap'
 
 import { SwapQuote } from '@/types'
-import { useUserWallet } from './use-user-wallet'
+import { useUserWallet } from '@/context/user-wallet-context'
 import { useNetwork } from '@/context/network-context'
 import { useSwapResetStore } from '@/store/swap-reset-store'
 import { useSwapHistoryStore } from '@/store/swap-history-store'
-import { VersionedTransaction } from '@solana/web3.js'
 
 export function useSwapScreen() {
   const { theme } = useUniwind()
@@ -281,7 +280,7 @@ export function useSwapScreen() {
       setSwapStatus('building')
 
       const swapResponse = await getSwapTransaction({
-        userPublicKey: publicKey.toBase58(),
+        userPublicKey: publicKey,
         quoteResponse: quote,
       })
 
@@ -295,8 +294,7 @@ export function useSwapScreen() {
       }
 
       setSwapStatus('signing')
-      const tx = VersionedTransaction.deserialize(swapResponse.transaction)
-      const signature = await signAndSendTransaction(tx)
+      const signature = await signAndSendTransaction(swapResponse.transaction)
 
       if (signature) {
         await Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success)

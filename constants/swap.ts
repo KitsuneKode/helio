@@ -20,7 +20,7 @@ export const USDT: Token = {
   mint: 'Es9vMFrzaCERmJfrF4H2FYD4KCoNkY11McCe8BenwNYB',
   symbol: 'USDT',
   name: 'Tether USD',
-  logo: 'https://raw.githubusercontent.com/solana-labs/token-list/main/assets/mainnet/Es9vMFrzaCERmJfrF4H2FYD4KCoNkY11McCe8BenwNYB/logo.svg',
+  logo: 'https://coin-images.coingecko.com/coins/images/325/large/Tether.png',
   decimals: 6,
 }
 

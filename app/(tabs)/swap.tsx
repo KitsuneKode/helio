@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { ScrollView, View } from 'react-native'
+import { Pressable, ScrollView, View } from 'react-native'
 import { SafeAreaViewUniwind } from '@/components/styled-uniwind-components'
 import { QuoteCard } from '@/components/swap-screen/quote-card'
 import { QuoteCardSkeleton } from '@/components/swap-screen/quote-card-skeleton'
@@ -11,10 +11,12 @@ import { SwapFooter } from '@/components/swap-screen/swap-footer'
 import { SwapHeader } from '@/components/swap-screen/swap-header'
 import { TokenPickerModal } from '@/components/swap-screen/token-picker-modal'
 import { Text } from '@/components/ui/text'
+import { useNetwork } from '@/context/network-context'
 import { useSwapScreen } from '@/hooks/use-swap-screen'
 
 export default function SwapScreen() {
   const swap = useSwapScreen()
+  const { toggleNetwork } = useNetwork()
   const [pickerSide, setPickerSide] = useState<'from' | 'to' | null>(null)
 
   return (
@@ -33,7 +35,13 @@ export default function SwapScreen() {
               Swapping is only available on mainnet
             </Text>
             <Text className="text-muted-foreground mt-2 text-center text-sm">
-              Switch to mainnet in Settings to use the swap feature
+              Swaps unavailable on devnet{' · '}
+              <Text
+                className="text-primary text-sm font-medium"
+                onPress={toggleNetwork}
+              >
+                Switch to Mainnet
+              </Text>
             </Text>
           </View>
         ) : (

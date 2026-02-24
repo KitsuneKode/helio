@@ -11,12 +11,11 @@ import {
 import { getAllTokens, getAllTransactions, getBalance, isValidPublicKey } from '@/lib/solana'
 import { useHistoryStore } from '@/store/history-store'
 import { useWalletResetStore } from '@/store/wallet-reset-store'
+import { useWalletRefreshStore } from '@/store/wallet-refresh-store'
 import { getMetaDataFromCacheOrFetch } from '@/lib/cache/token-metadata'
 import { fetchTokenJupiterDetail } from '@/lib/solana/token-details'
 import { TOKEN_PAGE, TXN_PAGE } from '@/constants/solana'
-import { SystemProgram } from '@solana/web3.js'
-
-const SOL_MINT = SystemProgram.programId.toBase58()
+const SOL_MINT = '11111111111111111111111111111111'
 
 type WalletData = {
   balance: GetBalanceResult
@@ -30,11 +29,13 @@ type WalletData = {
 export function useWalletScreen(initialAddress?: string) {
   const { rpc, network, heliusDevnetRpcUrl } = useNetwork()
   const resetCount = useWalletResetStore((s) => s.resetCount)
+  const refreshCount = useWalletRefreshStore((s) => s.refreshCount)
   const autoSearchDone = useRef(false)
   const mountedRef = useRef(true)
 
   const [value, setValue] = useState<string>(initialAddress ?? '')
   const [loading, setLoading] = useState(false)
+  const [refreshing, setRefreshing] = useState(false)
   const [loadingMoreTxn, setLoadingMoreTxn] = useState(false)
   const [loadingMoreTkn, setLoadingMoreTkn] = useState(false)
   const [walletData, setWalletData] = useState<WalletData | null>(null)
@@ -54,9 +55,18 @@ export function useWalletScreen(initialAddress?: string) {
     }
   }, [])
 
+  // Clear and refetch for new network — never show cross-network stale data
+  const prevNetworkRef = useRef(network)
   useEffect(() => {
-    setValue('')
+    if (network === prevNetworkRef.current) return
+    prevNetworkRef.current = network
+
+    const addr = value.trim()
     setWalletData(null)
+    if (addr) {
+      handleSearchAddress(addr)
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [network])
 
   // Clear when Home tab is re-pressed (via reset signal)
@@ -68,6 +78,18 @@ export function useWalletScreen(initialAddress?: string) {
     }
   }, [resetCount])
 
+  // Refresh data when triggered (e.g. after sending SOL)
+  const initialRefreshCount = useRef(refreshCount)
+  useEffect(() => {
+    if (refreshCount !== initialRefreshCount.current) {
+      const addr = value.trim()
+      if (addr && walletData) {
+        handleSearchAddress(addr, { silent: true })
+      }
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [refreshCount])
+
   const resetResults = () => setWalletData(null)
 
   const handleChangeValue = (text: string) => setValue(text)
@@ -78,12 +100,12 @@ export function useWalletScreen(initialAddress?: string) {
   }
 
   const handleSearchAddress = useCallback(
-    async (addr: string) => {
+    async (addr: string, options?: { silent?: boolean }) => {
       const { success, address: publicKey } = isValidPublicKey(addr)
       if (!success) return Alert.alert('Validation Error', 'Please enter a valid public key')
 
       Keyboard.dismiss()
-      setLoading(true)
+      if (!options?.silent) setLoading(true)
       try {
         const [bal, tokn, txns, solDetail] = await Promise.all([
           getBalance(rpc, publicKey),
@@ -124,6 +146,17 @@ export function useWalletScreen(initialAddress?: string) {
     },
     [rpc, network, heliusDevnetRpcUrl],
   )
+
+  const handleRefresh = useCallback(async () => {
+    const addr = value.trim()
+    if (!addr) return
+    setRefreshing(true)
+    try {
+      await handleSearchAddress(addr, { silent: true })
+    } finally {
+      setRefreshing(false)
+    }
+  }, [value, handleSearchAddress])
 
   const handleSearch = async () => {
     const addr = value.trim()
@@ -237,6 +270,7 @@ export function useWalletScreen(initialAddress?: string) {
   return {
     value,
     loading,
+    refreshing,
     loadingMoreTxn,
     loadingMoreTkn,
     walletData,
@@ -246,6 +280,7 @@ export function useWalletScreen(initialAddress?: string) {
     handleChangeValue,
     handleClear,
     handleSearch,
+    handleRefresh,
     handleLoadMoreTransactions,
     handleLoadMoreTokens,
     handleShowLessTokens,

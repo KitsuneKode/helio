@@ -12,7 +12,7 @@ export function SwapHeader() {
           via Jupiter Aggregator
         </Text>
       </View>
-      <View className="flex-row items-center gap-1">
+      <View className="flex-row items-center gap-1.5">
         <WalletConnectButton compact />
         <ThemeToggle />
       </View>

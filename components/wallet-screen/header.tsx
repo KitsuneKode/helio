@@ -11,7 +11,7 @@ export function Header() {
         <Text className="text-foreground text-2xl font-bold tracking-tight">Helio</Text>
         <Text className="text-muted-foreground text-xs">Your Solana Companion</Text>
       </View>
-      <View className="flex-row items-center gap-1">
+      <View className="flex-row items-center gap-1.5">
         <WalletConnectButton compact />
         <NetworkToggle />
         <ThemeToggle />

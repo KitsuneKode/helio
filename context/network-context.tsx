@@ -1,6 +1,5 @@
 import { createContext, useContext, useMemo, useState } from 'react'
 import { createSolanaRpc, createSolanaRpcSubscriptions } from '@solana/kit'
-import { clusterApiUrl } from '@solana/web3.js'
 import { storage } from '@/lib/storage'
 
 export type Network = 'mainnet' | 'devnet'
@@ -9,6 +8,7 @@ const STORAGE_KEYS = {
   mainnet: 'rpc-url-mainnet',
   devnet: 'rpc-url-devnet',
   heliusDevnet: 'rpc-url-helius-devnet',
+  selectedNetwork: 'selected-network',
 } as const
 
 type NetworkContextValue = {
@@ -18,6 +18,7 @@ type NetworkContextValue = {
   toggleNetwork: () => void
   customMainnetRpc: string
   customDevnetRpc: string
+  endpoint: string
   heliusDevnetRpcUrl: string
   hasHeliusRpc: boolean
   setCustomMainnetRpc: (url: string) => void
@@ -47,7 +48,10 @@ const RPC_SUBSCRIPTIONS_URLS = {
 }
 
 export function NetworkProvider({ children }: { children: React.ReactNode }) {
-  const [network, setNetwork] = useState<Network>('mainnet')
+  const [network, setNetwork] = useState<Network>(() => {
+    const saved = storage.getItem(STORAGE_KEYS.selectedNetwork)
+    return saved === 'devnet' ? 'devnet' : 'mainnet'
+  })
   const [customMainnetRpc, setCustomMainnetRpcState] = useState(() => loadUrl(STORAGE_KEYS.mainnet))
   const [customDevnetRpc, setCustomDevnetRpcState] = useState(() => loadUrl(STORAGE_KEYS.devnet))
   const [heliusDevnetRpcUrl, setHeliusDevnetRpcUrlState] = useState(() =>
@@ -55,8 +59,8 @@ export function NetworkProvider({ children }: { children: React.ReactNode }) {
   )
 
   // Always have an RPC — fall back to Solana's public cluster URL
-  const mainnetRpcUrl = customMainnetRpc || clusterApiUrl('mainnet-beta')
-  const devnetRpcUrl = customDevnetRpc || clusterApiUrl('devnet')
+  const mainnetRpcUrl = customMainnetRpc || 'https://api.mainnet-beta.solana.com'
+  const devnetRpcUrl = customDevnetRpc || 'https://api.devnet.solana.com'
   const hasHeliusRpc = heliusDevnetRpcUrl.length > 0
 
   const effectiveUrl = network === 'mainnet' ? mainnetRpcUrl : devnetRpcUrl
@@ -69,7 +73,11 @@ export function NetworkProvider({ children }: { children: React.ReactNode }) {
     [rpcSubscriptionsUrl],
   )
   const toggleNetwork = () => {
-    setNetwork((prev) => (prev === 'mainnet' ? 'devnet' : 'mainnet'))
+    setNetwork((prev) => {
+      const next = prev === 'mainnet' ? 'devnet' : 'mainnet'
+      storage.setItem(STORAGE_KEYS.selectedNetwork, next)
+      return next
+    })
   }
 
   const setCustomMainnetRpc = (url: string) => {
@@ -93,6 +101,7 @@ export function NetworkProvider({ children }: { children: React.ReactNode }) {
         toggleNetwork,
         customMainnetRpc,
         customDevnetRpc,
+        endpoint: effectiveUrl,
         heliusDevnetRpcUrl,
         hasHeliusRpc,
         setCustomMainnetRpc,

@@ -1,4 +1,4 @@
-import { Button } from './ui/button'
+import { Pressable } from 'react-native'
 import { Uniwind, useUniwind } from 'uniwind'
 import { Icon } from './ui/icon'
 import { Moon01Icon, SunIcon } from '@hugeicons/core-free-icons'
@@ -17,13 +17,11 @@ export function ThemeToggle() {
   }
 
   return (
-    <Button
+    <Pressable
       onPressIn={toggleTheme}
-      size="icon"
-      variant="ghost"
-      className="ios:size-9 web:mx-4 rounded-full"
+      className="bg-muted items-center justify-center rounded-full p-1.5 active:opacity-70"
     >
-      <Icon icon={THEME_ICONS[theme ?? 'light']} className="size-5" />
-    </Button>
+      <Icon icon={THEME_ICONS[theme ?? 'light']} className="text-muted-foreground size-4" />
+    </Pressable>
   )
 }

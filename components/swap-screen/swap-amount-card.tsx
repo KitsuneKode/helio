@@ -1,4 +1,4 @@
-import { useState, type ReactNode } from 'react'
+import { useRef, useState, type ReactNode } from 'react'
 import { Image, Pressable, TextInput, View } from 'react-native'
 import { ArrowDown01Icon } from '@hugeicons/core-free-icons'
 import { Icon } from '@/components/ui/icon'
@@ -15,7 +15,15 @@ import {
 
 function TokenLogo({ uri, size = 28 }: { uri: string; size?: number }) {
   const [err, setErr] = useState(false)
-  return err ? (
+  const prevUri = useRef(uri)
+
+  // Reset error when URI changes (e.g. token swap)
+  if (uri !== prevUri.current) {
+    prevUri.current = uri
+    if (err) setErr(false)
+  }
+
+  return err || !uri ? (
     <View className="bg-primary/15 rounded-full" style={{ width: size, height: size }} />
   ) : (
     <Image

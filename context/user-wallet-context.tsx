@@ -1,10 +1,5 @@
-import { createContext, useContext, useState, useCallback, useMemo } from 'react'
-import {
-  transact as transactWeb3js,
-  Web3MobileWallet,
-} from '@solana-mobile/mobile-wallet-adapter-protocol-web3js'
-import { transact as transactBase } from '@solana-mobile/mobile-wallet-adapter-protocol'
-import { PublicKey, VersionedTransaction, LAMPORTS_PER_SOL } from '@solana/web3.js'
+import { createContext, useContext, useState, useCallback, useEffect } from 'react'
+import { transact, KitMobileWallet } from '@solana-mobile/mobile-wallet-adapter-protocol-kit'
 import {
   address,
   pipe,
@@ -15,28 +10,32 @@ import {
   compileTransaction,
   getBase64EncodedWireTransaction,
   getTransactionDecoder,
+  createNoopSigner,
+  getAddressCodec,
   getBase64Encoder,
-  sendAndConfirmTransactionFactory,
-  assertIsFullySignedTransaction,
-  assertIsTransactionWithBlockhashLifetime,
-  assertIsSendableTransaction,
   lamports,
-  getSignatureFromTransaction,
-  type Blockhash,
+  type Address,
   type Signature,
-  type TransactionPartialSigner,
-  type Rpc,
-  type SolanaRpcApi,
-  type RpcSubscriptions,
-  type SolanaRpcSubscriptionsApi,
 } from '@solana/kit'
 import { getTransferSolInstruction } from '@solana-program/system'
 import { useNetwork, type Network } from '@/context/network-context'
+import { storage } from '@/lib/storage'
+import { Base64EncodedAddress } from '@solana-mobile/mobile-wallet-adapter-protocol'
+
+const LAMPORTS_PER_SOL = 1_000_000_000n
 
 const APP_IDENTITY = {
   name: 'Helio',
   uri: 'https://helio.kitsnelabs.xyz',
   icon: 'favicon.ico',
+}
+
+/** Storage keys are scoped per network so tokens don't cross chains */
+function storageKeys(net: Network) {
+  return {
+    authToken: `wallet-auth-token-${net}`,
+    base64Address: `wallet-base64-address-${net}`,
+  }
 }
 
 function getWalletErrorMessage(error: any): string {
@@ -62,51 +61,122 @@ function getChain(network: Network) {
   return network === 'mainnet' ? 'solana:mainnet-beta' : 'solana:devnet'
 }
 
+/** Decode a base64 MWA account address into a kit Address */
+
+export function getAddressFromBase64(encoded: Base64EncodedAddress): Address {
+  const decoded = getBase64Encoder().encode(encoded)
+
+  return getAddressCodec().decode(decoded)
+}
+
 type UserWalletContextValue = {
-  publicKey: PublicKey | null
+  publicKey: Address | null
   connected: boolean
   connecting: boolean
   sending: boolean
   signing: boolean
-  connect: () => Promise<PublicKey>
-  disconnect: () => void
+  connect: () => Promise<Address>
+  disconnect: () => Promise<void>
   getBalance: () => Promise<number>
   sendSOL: (toAddress: string, amountSOL: number) => Promise<string>
-  signAndSendTransaction: (transaction: VersionedTransaction) => Promise<string>
+  signAndSendTransaction: (transactionBytes: Uint8Array) => Promise<string>
 }
 
 const UserWalletContext = createContext<UserWalletContextValue | null>(null)
 
 export function UserWalletProvider({ children }: { children: React.ReactNode }) {
-  const [publicKey, setPublicKey] = useState<PublicKey | null>(null)
+  const [publicKey, setPublicKey] = useState<Address | null>(null)
   const [connecting, setConnecting] = useState(false)
   const [signing, setSigning] = useState(false)
   const [sending, setSending] = useState(false)
-  const { rpc, network, rpcSubscriptions } = useNetwork()
+  const [authToken, setAuthToken] = useState<string | null>(null)
+  const { rpc, network } = useNetwork()
 
-  const sendAndConfirmTransaction = useMemo(
-    () =>
-      sendAndConfirmTransactionFactory({
-        rpc: rpc as Rpc<SolanaRpcApi>,
-        rpcSubscriptions: rpcSubscriptions as RpcSubscriptions<SolanaRpcSubscriptionsApi>,
-      }),
-    [rpc, rpcSubscriptions],
+  // Restore cached wallet for current network (also runs on network switch)
+  useEffect(() => {
+    const keys = storageKeys(network)
+    const cachedToken = storage.getItem(keys.authToken)
+    const cachedAddress = storage.getItem(keys.base64Address)
+    if (cachedToken && cachedAddress) {
+      try {
+        const addr = getAddressFromBase64(cachedAddress)
+        setPublicKey(addr)
+        setAuthToken(cachedToken)
+      } catch {
+        // Corrupted cache — clear it
+        storage.removeItem(keys.authToken)
+        storage.removeItem(keys.base64Address)
+        setPublicKey(null)
+        setAuthToken(null)
+      }
+    } else {
+      // No cached session for this network
+      setPublicKey(null)
+      setAuthToken(null)
+    }
+  }, [network])
+
+  /** Try reauthorize with cached token, fall back to full authorize */
+  const authorizeSession = useCallback(
+    async (wallet: KitMobileWallet): Promise<{ authToken: string; pubKey: Address }> => {
+      const chain = getChain(network)
+
+      if (authToken) {
+        try {
+          const reauth = await wallet.reauthorize({
+            auth_token: authToken,
+            identity: APP_IDENTITY,
+          })
+          const token = reauth.auth_token
+          const keys = storageKeys(network)
+          storage.setItem(keys.authToken, token)
+          setAuthToken(token)
+          return { authToken: token, pubKey: publicKey! }
+        } catch {
+          // Token expired — fall through to full authorize
+        }
+      }
+
+      const result = await wallet.authorize({
+        chain,
+        identity: APP_IDENTITY,
+      })
+      const token = result.auth_token
+      const base64Addr = result.accounts[0].address
+      const pubKey = getAddressFromBase64(base64Addr)
+
+      const keys = storageKeys(network)
+      storage.setItem(keys.authToken, token)
+      storage.setItem(keys.base64Address, base64Addr)
+      setAuthToken(token)
+      setPublicKey(pubKey)
+
+      return { authToken: token, pubKey }
+    },
+    [authToken, network, publicKey],
   )
 
   const connect = useCallback(async () => {
     setConnecting(true)
     try {
-      const authResult = await transactWeb3js(async (wallet: Web3MobileWallet) => {
-        const result = await wallet.authorize({
+      const result = await transact(async (wallet: KitMobileWallet) => {
+        const authResult = await wallet.authorize({
           chain: getChain(network),
           identity: APP_IDENTITY,
         })
-        return result
+        return authResult
       })
-      const pubKey = new PublicKey(
-        Uint8Array.from(atob(authResult.accounts[0].address), (c) => c.charCodeAt(0)),
-      )
+
+      const base64Addr = result.accounts[0].address
+      const pubKey = getAddressFromBase64(base64Addr)
+
+      // Cache to MMKV (scoped to current network)
+      const keys = storageKeys(network)
+      storage.setItem(keys.authToken, result.auth_token)
+      storage.setItem(keys.base64Address, base64Addr)
+
       setPublicKey(pubKey)
+      setAuthToken(result.auth_token)
       return pubKey
     } catch (error: any) {
       console.log('Wallet connection error:', error)
@@ -116,139 +186,172 @@ export function UserWalletProvider({ children }: { children: React.ReactNode }) 
     }
   }, [network])
 
-  const disconnect = useCallback(() => {
+  const disconnect = useCallback(async () => {
+    // Just clear local state — don't deauthorize with the wallet app.
+    // This way if the user reconnects, reauthorize can restore the session
+    // silently without forcing a full approve flow.
+    const keys = storageKeys(network)
+    storage.removeItem(keys.authToken)
+    storage.removeItem(keys.base64Address)
+
     setPublicKey(null)
-  }, [])
+    setAuthToken(null)
+  }, [network])
 
   const getBalance = useCallback(async () => {
     if (!publicKey) return 0
-    const balance = await rpc.getBalance(address(publicKey.toString())).send()
-    return Number(balance.value) / LAMPORTS_PER_SOL
+    const balance = await rpc.getBalance(publicKey).send()
+    return Number(balance.value) / Number(LAMPORTS_PER_SOL)
   }, [publicKey, rpc])
+
+  /** Poll getSignatureStatuses until confirmed/finalized or timeout */
+  const confirmTransaction = useCallback(
+    async (signature: string) => {
+      const sig = signature as Signature
+      for (let i = 0; i < 15; i++) {
+        await new Promise((r) => setTimeout(r, 2000))
+        try {
+          const result = await rpc.getSignatureStatuses([sig]).send()
+          const status = result.value[0]
+          if (status) {
+            if (status.err) {
+              throw new Error(`Transaction failed: ${JSON.stringify(status.err)}`)
+            }
+            if (
+              status.confirmationStatus === 'confirmed' ||
+              status.confirmationStatus === 'finalized'
+            ) {
+              return
+            }
+          }
+        } catch (error: any) {
+          if (error.message?.startsWith('Transaction failed')) throw error
+          // RPC hiccup — keep polling
+        }
+      }
+      throw new Error(
+        'Transaction confirmation timed out. It may still confirm — check your wallet.',
+      )
+    },
+    [rpc],
+  )
 
   const sendSOL = useCallback(
     async (toAddress: string, amountSOL: number) => {
       if (!publicKey) throw new Error('Wallet not connected')
       setSending(true)
       try {
-        const source = address(publicKey.toString())
-        const destination = address(toAddress)
-
-        // Noop signer — actual signing happens in mobile wallet
-        const sourceSigner: TransactionPartialSigner = {
-          address: source,
-          signTransactions: async (txs) => txs,
-        }
-
         // Fetch blockhash
-        let latestBlockhash: { blockhash: Blockhash; lastValidBlockHeight: bigint }
+        let blockhashValue: string
+        let lastValidBlockHeight: bigint
         try {
           const result = await rpc.getLatestBlockhash().send()
-          latestBlockhash = result.value as typeof latestBlockhash
+          blockhashValue = result.value.blockhash as string
+          lastValidBlockHeight = result.value.lastValidBlockHeight
         } catch {
           throw new Error(
             'Unable to reach the Solana network. Check your connection and try again.',
           )
         }
 
-        // Build transaction with @solana/kit
-        const transactionMessage = pipe(
+        // Create noop signer for instruction accounts — MWA does the real signing
+        const signer = createNoopSigner(publicKey)
+
+        // Build transaction with kit
+        const message = pipe(
           createTransactionMessage({ version: 0 }),
-          (m) => setTransactionMessageFeePayer(source, m),
-          (m) => setTransactionMessageLifetimeUsingBlockhash(latestBlockhash, m),
-          (m) =>
+          (msg) => setTransactionMessageFeePayer(publicKey, msg),
+          (msg) =>
+            setTransactionMessageLifetimeUsingBlockhash(
+              {
+                blockhash: blockhashValue as ReturnType<typeof import('@solana/kit').blockhash>,
+                lastValidBlockHeight,
+              },
+              msg,
+            ),
+          (msg) =>
             appendTransactionMessageInstruction(
               getTransferSolInstruction({
-                source: sourceSigner,
-                destination,
-                amount: lamports(BigInt(Math.round(amountSOL * LAMPORTS_PER_SOL))),
+                source: signer,
+                destination: address(toAddress),
+                amount: lamports(BigInt(Math.round(amountSOL * Number(LAMPORTS_PER_SOL)))),
               }),
-              m,
+              msg,
             ),
         )
 
-        const compiledTx = compileTransaction(transactionMessage)
-        const base64UnsignedTx = getBase64EncodedWireTransaction(compiledTx)
+        const compiledTx = compileTransaction(message)
 
-        // Sign via base MWA protocol (base64 in → signed base64 out)
-        let signedBase64: string
-        try {
-          signedBase64 = await transactBase(async (wallet) => {
-            await wallet.authorize({
-              chain: getChain(network),
-              identity: APP_IDENTITY,
-            })
-            const result = await wallet.signTransactions({
-              payloads: [base64UnsignedTx],
-            })
-            return result.signed_payloads[0]
+        // Sign via MWA (sign only, we send ourselves)
+        const signedTx = await transact(async (wallet: KitMobileWallet) => {
+          await authorizeSession(wallet)
+          const signed = await wallet.signTransactions({
+            transactions: [compiledTx],
           })
-        } catch (error: any) {
-          throw new Error(getWalletErrorMessage(error))
+          return signed[0]
+        })
+
+        // Send signed tx via RPC
+        const base64Tx = getBase64EncodedWireTransaction(signedTx)
+        const sigString = (await rpc
+          .sendTransaction(base64Tx, { encoding: 'base64' })
+          .send()) as string
+
+        // Poll for confirmation
+        await confirmTransaction(sigString)
+
+        return sigString
+      } catch (error: any) {
+        if (
+          error.message?.includes('Unable to reach') ||
+          error.message?.includes('timed out') ||
+          error.message?.includes('Transaction failed')
+        ) {
+          throw error
         }
-
-        // Decode signed base64 back to kit Transaction
-        const signedBytes = getBase64Encoder().encode(signedBase64)
-        const signedTransaction = getTransactionDecoder().decode(signedBytes)
-
-        assertIsFullySignedTransaction(signedTransaction)
-        assertIsTransactionWithBlockhashLifetime(signedTransaction)
-        assertIsSendableTransaction(signedTransaction)
-
-        // Send + confirm via kit
-        await sendAndConfirmTransaction(signedTransaction, { commitment: 'confirmed' })
-
-        return getSignatureFromTransaction(signedTransaction) as string
+        throw new Error(getWalletErrorMessage(error))
       } finally {
         setSending(false)
       }
     },
-    [publicKey, rpc, network, sendAndConfirmTransaction],
+    [publicKey, rpc, authorizeSession, confirmTransaction],
   )
 
   const signAndSendTransaction = useCallback(
-    async (transaction: VersionedTransaction) => {
+    async (transactionBytes: Uint8Array) => {
       setSigning(true)
       try {
-        // Serialize web3.js tx to base64
-        const base64Tx = Buffer.from(transaction.serialize()).toString('base64')
+        // Decode raw wire bytes into a kit Transaction
+        const transaction = getTransactionDecoder().decode(transactionBytes)
 
-        // Sign via base MWA protocol
-        let signedBase64: string
-        try {
-          signedBase64 = await transactBase(async (wallet) => {
-            await wallet.authorize({
-              chain: getChain(network),
-              identity: APP_IDENTITY,
-            })
-            const result = await wallet.signTransactions({
-              payloads: [base64Tx],
-            })
-            return result.signed_payloads[0]
+        // Sign via MWA (sign only, we send ourselves)
+        const signedTx = await transact(async (wallet: KitMobileWallet) => {
+          await authorizeSession(wallet)
+          const signed = await wallet.signTransactions({
+            transactions: [transaction],
           })
-        } catch (error: any) {
-          throw new Error(getWalletErrorMessage(error))
-        }
+          return signed[0]
+        })
 
-        // Decode signed base64 back to kit Transaction
-        const signedBytes = getBase64Encoder().encode(signedBase64)
-        const signedTransaction = getTransactionDecoder().decode(signedBytes)
+        // Send signed tx via RPC
+        const base64Tx = getBase64EncodedWireTransaction(signedTx)
+        const sigString = (await rpc
+          .sendTransaction(base64Tx, { encoding: 'base64' })
+          .send()) as string
 
-        assertIsFullySignedTransaction(signedTransaction)
-        assertIsTransactionWithBlockhashLifetime(signedTransaction)
-        assertIsSendableTransaction(signedTransaction)
+        await confirmTransaction(sigString)
 
-        // Send + confirm via kit
-        await sendAndConfirmTransaction(signedTransaction, { commitment: 'confirmed' })
-
-        return getSignatureFromTransaction(signedTransaction) as string
+        return sigString
       } catch (error: any) {
+        if (error.message?.includes('timed out') || error.message?.includes('Transaction failed')) {
+          throw error
+        }
         throw new Error(getWalletErrorMessage(error))
       } finally {
         setSigning(false)
       }
     },
-    [network, sendAndConfirmTransaction],
+    [rpc, authorizeSession, confirmTransaction],
   )
 
   return (
