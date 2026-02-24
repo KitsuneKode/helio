@@ -1,73 +1,112 @@
-# Minimal Uniwind Template
+<div align="center">
 
-This is a [React Native](https://reactnative.dev/) project built with [Expo](https://expo.dev/) and [React Native Reusables](https://reactnativereusables.com).
+<!-- Replace with app logo -->
+<img src="assets/images/icon.png" alt="Helio" width="100" height="100" />
 
-It was initialized using the following command:
+# Helio
 
-```bash
-npx @react-native-reusables/cli@latest init -t solscan
-```
+**A native Solana explorer and wallet for Android**
+
+[![MIT License](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
+[![React Native](https://img.shields.io/badge/React_Native-0.81-blue.svg)](https://reactnative.dev)
+[![Expo](https://img.shields.io/badge/Expo-SDK_53-black.svg)](https://expo.dev)
+
+</div>
+
+<!-- Screenshots: Replace with 4 app screenshots side by side
+<div align="center">
+  <img src="" width="24%" alt="Wallet" />
+  <img src="" width="24%" alt="Token Details" />
+  <img src="" width="24%" alt="Swap" />
+  <img src="" width="24%" alt="Transaction" />
+</div>
+-->
+
+<!-- Demo: Replace with GIF or YouTube embed
+<div align="center">
+  <img src="" alt="Demo" width="300" />
+</div>
+-->
+
+<!-- Social: Replace with Twitter/X post embed or link
+-->
+
+## What is Helio?
+
+Helio is a mobile Solana explorer and wallet built with React Native. No single mobile app combines address lookup, token details with live market data, token swaps, and SOL transfers in one cohesive experience — Helio does.
+
+## Features
+
+- **Search any Solana wallet** — balances, tokens, transaction history
+- **Token details** — live market data from DexScreener, metadata, social links
+- **Swap tokens via Jupiter** — live quotes, slippage control, swap history
+- **Send SOL** to any address
+- **Watchlist & search history** with offline persistence
+- **Mainnet + Devnet** with custom RPC support
+- **Dark/light theme**
 
 ## Getting Started
 
-To run the development server:
+### Requirements
+
+- Node.js 18+
+- [Bun](https://bun.sh)
+- Android Studio **or** a physical Android device with USB debugging enabled
+- A Solana mobile wallet ([Phantom](https://phantom.app) / [Solflare](https://solflare.com)) for wallet features
+
+> **Note:** This is a **development build** — it does NOT run on Expo Go.
+
+### Setup
 
 ```bash
-    npm run dev
-    # or
-    yarn dev
-    # or
-    pnpm dev
-    # or
-    bun dev
+git clone https://github.com/kitsunekode/helio.git
+cd helio
+bun install
 ```
 
-This will start the Expo Dev Server. Open the app in:
+Create a `.env` file in the project root:
 
-- **iOS**: press `i` to launch in the iOS simulator _(Mac only)_
-- **Android**: press `a` to launch in the Android emulator
-- **Web**: press `w` to run in a browser
+```env
+EXPO_PUBLIC_MAIN_NET_RPC_URL=<your-mainnet-rpc-url>
+EXPO_PUBLIC_DEV_NET_RPC_URL=<your-devnet-rpc-url>
+EXPO_PUBLIC_HELIUS_DEV_NET_RPC_URL=<your-helius-devnet-rpc-url>
+```
 
-You can also scan the QR code using the [Expo Go](https://expo.dev/go) app on your device. This project fully supports running in Expo Go for quick testing on physical devices.
-
-## Adding components
-
-You can add more reusable components using the CLI:
+Build and run:
 
 ```bash
-npx react-native-reusables/cli@latest add [...components]
+bun expo prebuild
+bun expo run:android
 ```
 
-> e.g. `npx react-native-reusables/cli@latest add input textarea`
+## Contributing
 
-If you don't specify any component names, you'll be prompted to select which components to add interactively. Use the `--all` flag to install all available components at once.
+1. Fork the repo
+2. Create a feature branch (`git checkout -b feat/your-feature`)
+3. Make your changes
+4. Run `bun install` and test on a dev build
+5. Open a PR — keep it focused
 
-## Project Features
+Found a bug or have an idea? [Open an issue](https://github.com/kitsunekode/helio/issues).
 
-- ⚛️ Built with [Expo Router](https://expo.dev/router)
-- 🎨 Styled with [Tailwind CSS](https://tailwindcss.com/) via [Uniwind](https://uniwind.dev/)
-- 📦 UI powered by [React Native Reusables](https://github.com/founded-labs/react-native-reusables)
-- 🚀 New Architecture enabled
-- 🔥 Edge to Edge enabled
-- 📱 Runs on iOS, Android, and Web
+## Tech Stack
 
-## Learn More
+| Category | Tools |
+|----------|-------|
+| Framework | React Native 0.81, Expo Router v6, TypeScript |
+| State & Storage | Zustand, MMKV |
+| Animations | Reanimated |
+| Styling | Uniwind (Tailwind for RN) |
+| APIs | Jupiter, DexScreener, Helius RPC |
 
-To dive deeper into the technologies used:
+## License
 
-- [React Native Docs](https://reactnative.dev/docs/getting-started)
-- [Expo Docs](https://docs.expo.dev/)
-- [Uniwind Docs](https://docs.uniwind.dev/)
-- [React Native Reusables](https://reactnativereusables.com)
+[MIT](LICENSE)
 
-## Deploy with EAS
+## Author
 
-The easiest way to deploy your app is with [Expo Application Services (EAS)](https://expo.dev/eas).
+[KitsuneKode](https://github.com/kitsunekode)
 
-- [EAS Build](https://docs.expo.dev/build/introduction/)
-- [EAS Updates](https://docs.expo.dev/eas-update/introduction/)
-- [EAS Submit](https://docs.expo.dev/submit/introduction/)
+## Contributors
 
----
-
-If you enjoy using React Native Reusables, please consider giving it a ⭐ on [GitHub](https://github.com/founded-labs/react-native-reusables). Your support means a lot!
+Contributors welcome! Check the [issues page](https://github.com/kitsunekode/helio/issues) to get started.
