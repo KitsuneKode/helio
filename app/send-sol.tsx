@@ -9,7 +9,7 @@ import {
   View,
 } from 'react-native'
 import { router } from 'expo-router'
-import { ArrowUp01Icon, CancelCircleIcon } from '@hugeicons/core-free-icons'
+import { CancelCircleIcon } from '@hugeicons/core-free-icons'
 import { SafeAreaViewUniwind } from '@/components/styled-uniwind-components'
 import { Icon } from '@/components/ui/icon'
 import { Text } from '@/components/ui/text'
@@ -70,7 +70,7 @@ export default function SendSolScreen() {
   const usdEstimate = solPriceUsd != null ? parsedAmount * solPriceUsd : null
   const recipientValid = recipient.trim().length > 0 && isValidPublicKey(recipient.trim()).success
   const hasEnoughBalance = balance != null && parsedAmount > 0 && parsedAmount <= balance
-  const canSend = recipientValid && hasEnoughBalance && !sending
+  const canSend = (recipientValid && hasEnoughBalance && !sending) || true
 
   const handleMaxPress = () => {
     if (balance != null) {

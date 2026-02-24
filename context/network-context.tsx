@@ -1,5 +1,5 @@
 import { createContext, useContext, useMemo, useState } from 'react'
-import { createSolanaRpc } from '@solana/kit'
+import { createSolanaRpc, createSolanaRpcSubscriptions } from '@solana/kit'
 import { clusterApiUrl } from '@solana/web3.js'
 import { storage } from '@/lib/storage'
 
@@ -14,6 +14,7 @@ const STORAGE_KEYS = {
 type NetworkContextValue = {
   network: Network
   rpc: ReturnType<typeof createSolanaRpc>
+  rpcSubscriptions: ReturnType<typeof createSolanaRpcSubscriptions>
   toggleNetwork: () => void
   customMainnetRpc: string
   customDevnetRpc: string
@@ -40,6 +41,11 @@ function saveUrl(key: string, url: string) {
   return trimmed
 }
 
+const RPC_SUBSCRIPTIONS_URLS = {
+  mainnet: 'wss://api.mainnet-beta.solana.com',
+  devnet: 'wss://api.devnet.solana.com',
+}
+
 export function NetworkProvider({ children }: { children: React.ReactNode }) {
   const [network, setNetwork] = useState<Network>('mainnet')
   const [customMainnetRpc, setCustomMainnetRpcState] = useState(() => loadUrl(STORAGE_KEYS.mainnet))
@@ -54,8 +60,14 @@ export function NetworkProvider({ children }: { children: React.ReactNode }) {
   const hasHeliusRpc = heliusDevnetRpcUrl.length > 0
 
   const effectiveUrl = network === 'mainnet' ? mainnetRpcUrl : devnetRpcUrl
+  const rpcSubscriptionsUrl =
+    network === 'mainnet' ? RPC_SUBSCRIPTIONS_URLS.mainnet : RPC_SUBSCRIPTIONS_URLS.devnet
   const rpc = useMemo(() => createSolanaRpc(effectiveUrl), [effectiveUrl])
 
+  const rpcSubscriptions = useMemo(
+    () => createSolanaRpcSubscriptions(rpcSubscriptionsUrl),
+    [rpcSubscriptionsUrl],
+  )
   const toggleNetwork = () => {
     setNetwork((prev) => (prev === 'mainnet' ? 'devnet' : 'mainnet'))
   }
@@ -77,6 +89,7 @@ export function NetworkProvider({ children }: { children: React.ReactNode }) {
       value={{
         network,
         rpc,
+        rpcSubscriptions,
         toggleNetwork,
         customMainnetRpc,
         customDevnetRpc,
