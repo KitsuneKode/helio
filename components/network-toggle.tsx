@@ -2,6 +2,9 @@ import { Alert, Pressable, View } from 'react-native'
 import { router } from 'expo-router'
 import { useNetwork, type Network } from '@/context/network-context'
 import { Text } from '@/components/ui/text'
+import { storage } from '@/lib/storage'
+
+export const DEVNET_WARNING_DISMISSED_KEY = 'devnet-warning-dismissed'
 
 const SEGMENTS: { label: string; value: Network }[] = [
   { label: 'Main', value: 'mainnet' },
@@ -14,7 +17,7 @@ export function NetworkToggle() {
   function handlePress(value: Network) {
     if (value === network) return
 
-    if (value === 'devnet' && !hasHeliusRpc) {
+    if (value === 'devnet' && !hasHeliusRpc && storage.getItem(DEVNET_WARNING_DISMISSED_KEY) !== 'true') {
       Alert.alert(
         'Helius RPC Not Set',
         "Token metadata won't be available on devnet without a Helius RPC URL. You can add one in Settings.",
@@ -25,6 +28,13 @@ export function NetworkToggle() {
             onPress: () => {
               toggleNetwork()
               router.push('/(tabs)/settings')
+            },
+          },
+          {
+            text: "Don't Show Again",
+            onPress: () => {
+              storage.setItem(DEVNET_WARNING_DISMISSED_KEY, 'true')
+              toggleNetwork()
             },
           },
           { text: 'Switch Anyway', onPress: toggleNetwork },

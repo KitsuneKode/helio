@@ -6,8 +6,9 @@ import {
   SystemProgram,
   LAMPORTS_PER_SOL,
   VersionedTransaction,
+  TransactionMessage,
 } from '@solana/web3.js'
-import { address } from '@solana/kit'
+import { address, Signature } from '@solana/kit'
 import { useNetwork, type Network } from '@/context/network-context'
 
 const APP_IDENTITY = {
@@ -52,7 +53,9 @@ export function UserWalletProvider({ children }: { children: React.ReactNode }) 
         })
         return result
       })
-      const pubKey = new PublicKey(Buffer.from(authResult.accounts[0].address, 'base64'))
+      const pubKey = new PublicKey(
+        Uint8Array.from(atob(authResult.accounts[0].address), (c) => c.charCodeAt(0)),
+      )
       setPublicKey(pubKey)
       return pubKey
     } catch (error: any) {
@@ -79,18 +82,24 @@ export function UserWalletProvider({ children }: { children: React.ReactNode }) 
       setSending(true)
       try {
         const toPublicKey = new PublicKey(toAddress)
-        const transaction = new Transaction().add(
+        const instructions = [
           SystemProgram.transfer({
             fromPubkey: publicKey,
             toPubkey: toPublicKey,
             lamports: Math.round(amountSOL * LAMPORTS_PER_SOL),
           }),
-        )
+        ]
         const {
           value: { blockhash },
         } = await rpc.getLatestBlockhash().send()
-        transaction.recentBlockhash = blockhash
-        transaction.feePayer = publicKey
+
+        const txMessage = new TransactionMessage({
+          payerKey: publicKey,
+          recentBlockhash: blockhash,
+          instructions,
+        }).compileToV0Message()
+
+        const transferTx = new VersionedTransaction(txMessage)
 
         const txSignature = await transact(async (wallet: Web3MobileWallet) => {
           await wallet.authorize({
@@ -98,11 +107,36 @@ export function UserWalletProvider({ children }: { children: React.ReactNode }) 
             identity: APP_IDENTITY,
           })
           const signatures = await wallet.signAndSendTransactions({
-            transactions: [transaction],
+            transactions: [transferTx],
           })
-          return signatures[0]
+          return signatures[0] as unknown as Signature
         })
-        return txSignature
+
+        const maxRetries = 15
+        const retryDelay = 2000
+
+        for (let i = 0; i < maxRetries; i++) {
+          const confirmation = await rpc
+            .getSignatureStatuses([txSignature], { searchTransactionHistory: true })
+            .send()
+
+          const status = confirmation.value[0]
+
+          if (status?.err) {
+            throw new Error('Transaction failed on-chain. Please check your wallet for details.')
+          }
+
+          if (
+            status?.confirmationStatus === 'confirmed' ||
+            status?.confirmationStatus === 'finalized'
+          ) {
+            return String(txSignature)
+          }
+
+          await new Promise((resolve) => setTimeout(resolve, retryDelay))
+        }
+
+        throw new Error('Transaction confirmation timed out. It may still confirm later.')
       } finally {
         setSending(false)
       }

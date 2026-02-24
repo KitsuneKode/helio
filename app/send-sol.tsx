@@ -64,7 +64,7 @@ export default function SendSolScreen() {
     return () => {
       cancelled = true
     }
-  }, [connected, getBalance, network])
+  }, [connected, getBalance, network, heliusDevnetRpcUrl])
 
   const parsedAmount = parseFloat(amount) || 0
   const usdEstimate = solPriceUsd != null ? parsedAmount * solPriceUsd : null
@@ -239,7 +239,6 @@ export default function SendSolScreen() {
             </Text>
           ) : (
             <View className="flex-row items-center gap-2">
-              <Icon icon={ArrowUp01Icon} className="size-5 text-primary-foreground" />
               <Text className="text-primary-foreground text-xl font-semibold">
                 Send {parsedAmount} SOL
               </Text>

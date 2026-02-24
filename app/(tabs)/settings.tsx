@@ -1,7 +1,7 @@
-import { useState } from 'react'
-import { Alert, ScrollView, View } from 'react-native'
+import { useState, useCallback } from 'react'
+import { Alert, Pressable, ScrollView, View } from 'react-native'
 import { router } from 'expo-router'
-import { ArrowRight01Icon } from '@hugeicons/core-free-icons'
+import { ArrowRight01Icon, CheckmarkSquare01Icon, SquareIcon } from '@hugeicons/core-free-icons'
 import { SafeAreaViewUniwind } from '@/components/styled-uniwind-components'
 import { Text } from '@/components/ui/text'
 import { Card } from '@/components/ui/card'
@@ -10,12 +10,13 @@ import { Input } from '@/components/ui/input'
 import { Separator } from '@/components/ui/separator'
 import { SectionLabel } from '@/components/ui/section-label'
 import { ThemeToggle } from '@/components/theme-toggle-button'
-import { NetworkToggle } from '@/components/network-toggle'
+import { NetworkToggle, DEVNET_WARNING_DISMISSED_KEY } from '@/components/network-toggle'
 import { useNetwork } from '@/context/network-context'
 import { SettingsRow } from '@/components/settings-screen/settings-row'
 import { WalletConnectButton } from '@/components/wallet-connect-button'
 import { RPC_URL_REGEX } from '@/config'
 import { Uniwind, useResolveClassNames, useUniwind } from 'uniwind'
+import { storage } from '@/lib/storage'
 
 function validateAndSave(url: string, save: (url: string) => void, label: string) {
   const trimmed = url.trim()
@@ -39,6 +40,19 @@ export default function SettingsScreen() {
     setCustomDevnetRpc,
     setHeliusDevnetRpcUrl,
   } = useNetwork()
+
+  const [devnetWarning, setDevnetWarning] = useState(
+    () => storage.getItem(DEVNET_WARNING_DISMISSED_KEY) !== 'true',
+  )
+
+  const toggleDevnetWarning = useCallback((value: boolean) => {
+    setDevnetWarning(value)
+    if (value) {
+      storage.removeItem(DEVNET_WARNING_DISMISSED_KEY)
+    } else {
+      storage.setItem(DEVNET_WARNING_DISMISSED_KEY, 'true')
+    }
+  }, [])
 
   const [mainnetInput, setMainnetInput] = useState(customMainnetRpc)
   const [devnetInput, setDevnetInput] = useState(customDevnetRpc)
@@ -68,11 +82,22 @@ export default function SettingsScreen() {
         <SectionLabel className="ml-4" label="Network" />
         <Card className="overflow-hidden p-0 mb-4">
           <SettingsRow label="Network" right={<NetworkToggle />} />
+          <Separator />
+          <Pressable
+            onPress={() => toggleDevnetWarning(!devnetWarning)}
+            className="flex-row items-center gap-3 px-4 py-3 active:opacity-60"
+          >
+            <Icon
+              icon={devnetWarning ? CheckmarkSquare01Icon : SquareIcon}
+              className={`size-5 ${devnetWarning ? 'text-primary' : 'text-muted-foreground'}`}
+            />
+            <Text className="text-foreground text-sm">Warn when switching to devnet</Text>
+          </Pressable>
         </Card>
 
         {/* RPC URLs */}
         <SectionLabel className="ml-4" label="Custom RPC" />
-        <Card className="overflow-hidden p-0 mb-4">
+        <Card className="overflow-hidden p-0 mb-4 gap-1">
           <View className="px-4 py-2">
             <Text className="text-foreground text-sm font-medium mb-1">Mainnet RPC</Text>
             <Input
