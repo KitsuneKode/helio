@@ -47,18 +47,13 @@ Helio is a mobile Solana explorer and wallet built with React Native. No single 
 - **Mainnet + Devnet** with custom RPC support
 - **Dark/light theme**
 
-```bash
-
-For token metadata support on devnet.
-
-- Go to the settings page and add devnet rpc url from helius.
-
-- Add a mainnet rpc url from  any provider (e.g. QuickNode, Alchemy, etc.) for better performance.
-```
-
 ## Try It Out
 
 Grab the latest APK from [GitHub Releases](https://github.com/KitsuneKode/helio/releases/latest) and install it on any Android device. You'll need a Solana wallet app (Phantom/Solflare) installed for wallet features.
+
+> **Remember (Trying Features):**
+> To see token metadata on devnet, add a **Helius devnet RPC URL** in Settings.
+> Add a **mainnet RPC URL** from any provider (QuickNode, Alchemy, etc.) for better performance.
 
 ## Getting Started
 
@@ -88,10 +83,9 @@ bun expo prebuild
 bun expo run:android
 ```
 
-```bash
-  Go to the settings page and add devnet rpc url from helius.
-  Add a mainnet rpc url from  any provider (e.g. QuickNode, Alchemy, etc.) for better performance.
-```
+> **Remember (Development):**
+> In app Settings, add a **Helius devnet RPC URL** to enable token metadata on devnet.
+> Add a **mainnet RPC URL** from any provider (QuickNode, Alchemy, etc.) for better runtime performance.
 
 ## Contributing
 
