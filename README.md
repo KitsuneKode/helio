@@ -9,7 +9,7 @@
 
 [![MIT License](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
 [![React Native](https://img.shields.io/badge/React_Native-0.81-blue.svg)](https://reactnative.dev)
-[![Expo](https://img.shields.io/badge/Expo-SDK_53-black.svg)](https://expo.dev)
+[![Expo](https://img.shields.io/badge/Expo-SDK_54-black.svg)](https://expo.dev)
 
 [**Download APK**](https://github.com/KitsuneKode/helio/releases/latest/download/helio.v.1.2.apk)
 
@@ -24,14 +24,17 @@
 </div>
 -->
 
-<!-- Demo: Replace with GIF or YouTube embed
 <div align="center">
-  <img src="" alt="Demo" width="300" />
-</div>
--->
 
-<!-- Social: Replace with Twitter/X post embed or link
--->
+https://github.com/user-attachments/assets/6f8c2941-d662-48a3-9dd2-5925d63371f5
+
+</div>
+
+<div align="center">
+
+[![Twitter Post](https://img.shields.io/badge/Twitter-Post-1DA1F2?logo=x&logoColor=white)](https://x.com/KitsuneKode/status/2026682458251694292)
+
+</div>
 
 ## What is Helio?
 

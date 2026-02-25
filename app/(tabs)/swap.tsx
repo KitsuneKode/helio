@@ -1,6 +1,9 @@
 import { useState } from 'react'
-import { Pressable, ScrollView, View } from 'react-native'
-import { SafeAreaViewUniwind } from '@/components/styled-uniwind-components'
+import { View } from 'react-native'
+import {
+  KeyboardAwareScrollViewUniwind,
+  SafeAreaViewUniwind,
+} from '@/components/styled-uniwind-components'
 import { QuoteCard } from '@/components/swap-screen/quote-card'
 import { QuoteCardSkeleton } from '@/components/swap-screen/quote-card-skeleton'
 import { SlippageSelector } from '@/components/swap-screen/slippage-selector'
@@ -21,7 +24,7 @@ export default function SwapScreen() {
 
   return (
     <SafeAreaViewUniwind className="bg-background flex-1" edges={['top', 'bottom']}>
-      <ScrollView
+      <KeyboardAwareScrollViewUniwind
         showsVerticalScrollIndicator={false}
         className="flex-1"
         keyboardShouldPersistTaps="handled"
@@ -36,10 +39,7 @@ export default function SwapScreen() {
             </Text>
             <Text className="text-muted-foreground mt-2 text-center text-sm">
               Swaps unavailable on devnet{' · '}
-              <Text
-                className="text-primary text-sm font-medium"
-                onPress={toggleNetwork}
-              >
+              <Text className="text-primary text-sm font-medium" onPress={toggleNetwork}>
                 Switch to Mainnet
               </Text>
             </Text>
@@ -104,7 +104,7 @@ export default function SwapScreen() {
             />
           </>
         )}
-      </ScrollView>
+      </KeyboardAwareScrollViewUniwind>
     </SafeAreaViewUniwind>
   )
 }
