@@ -11,7 +11,7 @@
 [![React Native](https://img.shields.io/badge/React_Native-0.81-blue.svg)](https://reactnative.dev)
 [![Expo](https://img.shields.io/badge/Expo-SDK_53-black.svg)](https://expo.dev)
 
-[**Download APK**](https://github.com/KitsuneKode/helio/releases/latest/download/helio.apk)
+[**Download APK**](https://github.com/KitsuneKode/helio/releases/latest/download/helio.v.1.2.apk)
 
 </div>
 
@@ -47,6 +47,15 @@ Helio is a mobile Solana explorer and wallet built with React Native. No single 
 - **Mainnet + Devnet** with custom RPC support
 - **Dark/light theme**
 
+```bash
+
+For token metadata support on devnet.
+
+- Go to the settings page and add devnet rpc url from helius.
+
+- Add a mainnet rpc url from  any provider (e.g. QuickNode, Alchemy, etc.) for better performance.
+```
+
 ## Try It Out
 
 Grab the latest APK from [GitHub Releases](https://github.com/KitsuneKode/helio/releases/latest) and install it on any Android device. You'll need a Solana wallet app (Phantom/Solflare) installed for wallet features.
@@ -72,19 +81,16 @@ cd helio
 bun install
 ```
 
-Create a `.env` file in the project root:
-
-```env
-EXPO_PUBLIC_MAIN_NET_RPC_URL=<your-mainnet-rpc-url>
-EXPO_PUBLIC_DEV_NET_RPC_URL=<your-devnet-rpc-url>
-EXPO_PUBLIC_HELIUS_DEV_NET_RPC_URL=<your-helius-devnet-rpc-url>
-```
-
 Build and run:
 
 ```bash
 bun expo prebuild
 bun expo run:android
+```
+
+```bash
+  Go to the settings page and add devnet rpc url from helius.
+  Add a mainnet rpc url from  any provider (e.g. QuickNode, Alchemy, etc.) for better performance.
 ```
 
 ## Contributing
@@ -99,13 +105,13 @@ Found a bug or have an idea? [Open an issue](https://github.com/kitsunekode/heli
 
 ## Tech Stack
 
-| Category | Tools |
-|----------|-------|
-| Framework | React Native 0.81, Expo Router v6, TypeScript |
-| State & Storage | Zustand, MMKV |
-| Animations | Reanimated |
-| Styling | Uniwind (Tailwind for RN) |
-| APIs | Jupiter, DexScreener, Helius RPC |
+| Category        | Tools                                         |
+| --------------- | --------------------------------------------- |
+| Framework       | React Native 0.81, Expo Router v6, TypeScript |
+| State & Storage | Zustand, MMKV                                 |
+| Animations      | Reanimated                                    |
+| Styling         | Uniwind (Tailwind for RN)                     |
+| APIs            | Jupiter, DexScreener, Helius RPC              |
 
 ## License
 
